@@ -1,0 +1,510 @@
+import { useEffect, useReducer, useRef } from 'react'
+import DatePicker from './DatePicker.tsx'
+import { longLabel, toFa } from '../lib/jalali.ts'
+import { normalizePhone, phoneValid } from '../lib/phone.ts'
+import { site } from '../site.ts'
+
+type LocationKey = 'studio' | 'home'
+export type { LocationKey }
+type ServiceKey = 'cut' | 'blowdry' | 'package'
+
+type State = {
+  step: number
+  location: LocationKey | null
+  service: ServiceKey | null
+  date: string | null
+  time: string | null
+  name: string
+  phone: string
+  address: string
+  done: boolean
+}
+
+type Action =
+  | { type: 'choose'; key: 'location' | 'service' | 'date' | 'time'; value: string }
+  | { type: 'text'; key: 'name' | 'phone' | 'address'; value: string }
+  | { type: 'next' }
+  | { type: 'back' }
+  | { type: 'edit'; step: number }
+  | { type: 'reset' }
+
+const initial: State = {
+  step: 0,
+  location: null,
+  service: null,
+  date: null,
+  time: null,
+  name: '',
+  phone: '',
+  address: '',
+  done: false,
+}
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case 'choose': {
+      if (action.key === 'location') {
+        const loc = action.value as LocationKey
+        // drop a stale address when switching back to the studio
+        return { ...state, location: loc, address: loc === 'studio' ? '' : state.address }
+      }
+      if (action.key === 'service') return { ...state, service: action.value as ServiceKey }
+      // a time slot belongs to a specific day, so changing the date drops it
+      if (action.key === 'date') return { ...state, date: action.value, time: null }
+      return { ...state, time: action.value }
+    }
+    case 'text':
+      return { ...state, [action.key]: action.value }
+    case 'next':
+      // the contact step is the last one — submitting it flips to the summary
+      return state.step === 3 ? { ...state, done: true } : { ...state, step: state.step + 1 }
+    case 'back':
+      return { ...state, step: Math.max(0, state.step - 1) }
+    case 'edit':
+      return { ...state, step: action.step, done: false }
+    case 'reset':
+      return initial
+  }
+}
+
+const STEPS = ['محل سرویس', 'نوع خدمت', 'تاریخ و ساعت', 'اطلاعات تماس', 'تأیید']
+
+const LOCATIONS: { key: LocationKey; title: string; latin: string; note: string }[] = [
+  {
+    key: 'studio',
+    title: 'در استودیو',
+    latin: 'In Studio',
+    note: 'برش و براشینگ در فضای آرام استودیو.',
+  },
+  {
+    key: 'home',
+    title: 'در منزل شما',
+    latin: 'At Home',
+    note: 'همه‌ی خدمات استودیو، در خانه‌ی خودتان.',
+  },
+]
+
+const SERVICE_OPTIONS: { key: ServiceKey; title: string; note: string }[] = [
+  { key: 'cut', title: 'کوتاهی تخصصی', note: 'برش دقیق و متناسب با فرم صورت' },
+  { key: 'blowdry', title: 'براشینگ', note: 'خشک‌کردن و استایلینگ حرفه‌ای' },
+  { key: 'package', title: 'کوتاهی + براشینگ', note: 'پکیج کامل، با تخفیف ویژه' },
+]
+
+const SLOTS = Array.from({ length: 12 }, (_, i) => `${String(9 + i).padStart(2, '0')}:00`)
+
+const SERVICE_LABEL: Record<ServiceKey, string> = {
+  cut: 'کوتاهی تخصصی',
+  blowdry: 'براشینگ',
+  package: 'کوتاهی + براشینگ',
+}
+
+const LOCATION_LABEL: Record<LocationKey, string> = {
+  studio: 'در استودیو',
+  home: 'در منزل شما',
+}
+
+function OptionCard({
+  name,
+  value,
+  checked,
+  onSelect,
+  title,
+  latin,
+  note,
+}: {
+  name: string
+  value: string
+  checked: boolean
+  onSelect: (value: string) => void
+  title: string
+  latin?: string
+  note: string
+}) {
+  return (
+    <label className="flex cursor-pointer flex-col border border-line p-6 transition-colors duration-500 has-checked:border-fill has-checked:bg-wash has-focus-visible:outline-2 has-focus-visible:outline-offset-4 has-focus-visible:outline-ink hover:border-fill sm:p-8">
+      <input
+        type="radio"
+        name={name}
+        value={value}
+        checked={checked}
+        onChange={() => onSelect(value)}
+        className="sr-only"
+      />
+      <div className="flex items-start justify-between gap-4">
+        <span className="font-display text-2xl leading-[1.6] font-medium text-title sm:text-3xl">
+          {title}
+        </span>
+        {/* driven by `checked`, not peer-checked: these are grandchildren of the input's
+            sibling, and peer-checked only ever matches siblings of the peer */}
+        <span
+          className={`mt-2 flex size-6 shrink-0 items-center justify-center rounded-full border border-fill transition-colors duration-500 ${
+            checked ? 'bg-fill' : 'bg-transparent'
+          }`}
+        >
+          <svg
+            viewBox="0 0 12 12"
+            className={`size-3 text-on-fill transition-opacity duration-300 ${
+              checked ? 'opacity-100' : 'opacity-0'
+            }`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            aria-hidden="true"
+          >
+            <path d="M2 6.2 4.6 8.8 10 3.4" />
+          </svg>
+        </span>
+      </div>
+      {latin && (
+        <span className="mt-1 font-latin text-sm tracking-[0.2em] text-muted uppercase">
+          {latin}
+        </span>
+      )}
+      <span className="mt-5 text-body leading-8 font-light text-ink">{note}</span>
+    </label>
+  )
+}
+
+export default function Booking({ initialLocation = null }: { initialLocation?: LocationKey | null }) {
+  const [state, dispatch] = useReducer(reducer, { initialLocation }, (seed) => ({
+    ...initial,
+    location: seed.initialLocation,
+  }))
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  const home = state.location === 'home'
+
+  const stepValid = [
+    state.location !== null,
+    state.service !== null,
+    Boolean(state.date && state.time),
+    state.name.trim().length >= 2 && phoneValid(state.phone) && (!home || state.address.trim().length >= 5),
+  ]
+
+  // Anchor the top of the panel — the step title, the progress bars and the head of the
+  // newly revealed step — just below the sticky navbar. The previous `block: 'center'` on
+  // the panel *body* ignored both the navbar and the 118px panel header above that body,
+  // so on short viewports the step indicator scrolled off the top of the screen.
+  useEffect(() => {
+    if (state.step === 0 && !state.done) return
+    const panel = panelRef.current
+    if (!panel) return
+    const nav = document.querySelector('header')
+    const gap = 16
+    const top = window.scrollY + panel.getBoundingClientRect().top - (nav?.getBoundingClientRect().height ?? 0) - gap
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const target = Math.max(0, top)
+    if (reduce) {
+      // `behavior: 'auto'` resolves to the *computed* scroll-behavior, and `html` sets
+      // `scroll-behavior: smooth` — so it would still animate. Override inline, and
+      // `instant` alone is ignored by older browsers. Same trick as ScrollManager.
+      const root = document.documentElement
+      const previous = root.style.scrollBehavior
+      root.style.scrollBehavior = 'auto'
+      window.scrollTo(0, target)
+      root.style.scrollBehavior = previous
+    } else {
+      window.scrollTo({ top: target, behavior: 'smooth' })
+    }
+  }, [state.step, state.done])
+
+  const goNext = () => {
+    if (!stepValid[state.step]) return
+    dispatch({ type: 'next' })
+  }
+
+  const contactError = state.phone.length > 0 && !phoneValid(state.phone)
+  const addressError = state.address.length > 0 && state.address.trim().length < 5
+
+  const summary: [string, string][] = [
+    ['محل سرویس', state.location ? LOCATION_LABEL[state.location] : '—'],
+    ['نوع خدمت', state.service ? SERVICE_LABEL[state.service] : '—'],
+    ['تاریخ', state.date ? longLabel(state.date) : '—'],
+    ['ساعت', state.time ? toFa(state.time) : '—'],
+    ['نام و نام خانوادگی', state.name],
+    ['شماره تماس', toFa(normalizePhone(state.phone))],
+    ...(home ? ([['نشانی', state.address]] as [string, string][]) : []),
+  ]
+
+  const waText = encodeURIComponent(
+    [
+      'درخواست نوبت — حمیده دلدار',
+      ...summary.map(([k, v]) => `${k}: ${v}`),
+    ].join('\n'),
+  )
+
+  return (
+    <section id="booking" className="scroll-mt-24">
+      <div className="container-lux pt-24 pb-24 lg:pt-32 lg:pb-40">
+        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-20">
+          <div>
+            <p className="text-eyebrow text-muted">رزرو نوبت</p>
+            <h2 className="mt-7 font-display text-[clamp(2rem,5.5vw,2.5rem)] leading-[1.55] font-medium text-balance text-title">
+              نوبت خود را رزرو کنید
+            </h2>
+          </div>
+          <p className="max-w-xl text-lead font-light text-ink lg:pb-2">
+            پنج قدم کوتاه. بعد از ثبت فرم، برای هماهنگی نهایی با شما تماس می‌گیرم.
+          </p>
+        </div>
+
+        <div ref={panelRef} className="mt-16 border border-line lg:mt-24">
+          <div className="border-b border-line p-6 sm:p-8">
+            <div className="flex items-center justify-between gap-6">
+              <p className="text-eyebrow text-muted">
+                {state.done ? 'درخواست ثبت شد' : `مرحله ${toFa(state.step + 1)} از ${toFa(STEPS.length)}`}
+              </p>
+              <p className="text-body text-title">{STEPS[state.done ? STEPS.length - 1 : state.step]}</p>
+            </div>
+            <ol className="mt-5 flex items-center gap-2">
+              {STEPS.map((label, i) => (
+                <li key={label} className="flex-1">
+                  <span
+                    className={`block h-[3px] w-full transition-colors duration-500 ${
+                      state.done || i <= state.step ? 'bg-fill' : 'bg-line'
+                    }`}
+                  />
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div className="p-6 sm:p-8 lg:p-12">
+            {state.done ? (
+              <div key="done" className="animate-rise motion-reduce:animate-none">
+                <p className="text-eyebrow text-muted">تأیید</p>
+                <h3 className="mt-6 font-display text-3xl leading-[1.6] font-medium text-title sm:text-4xl">
+                  نوبت شما ثبت شد
+                </h3>
+                <p className="mt-5 max-w-lg text-body leading-8 font-light text-ink">
+                  ممنون {state.name.split(' ')[0]}. خلاصه‌ی نوبت شما به این شکل است. برای هماهنگی
+                  نهایی در همین روز با شما تماس می‌گیرم.
+                </p>
+
+                <dl className="mt-10 border-t border-line">
+                  {summary.map(([k, v]) => (
+                    <div
+                      key={k}
+                      className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-1 border-b border-line py-4"
+                    >
+                      <dt className="text-body font-light text-muted">{k}</dt>
+                      <dd className="text-body text-ink">{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+
+                <div className="mt-12 flex flex-wrap items-center gap-4">
+                  {site.phone ? (
+                    <a
+                      href={`https://wa.me/${site.phone.replace(/\D/g, '')}?text=${waText}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="pill h-14 px-8"
+                    >
+                      ارسال در واتساپ
+                    </a>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => dispatch({ type: 'edit', step: 3 })}
+                    className="link-underline text-body"
+                  >
+                    ویرایش نوبت
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => dispatch({ type: 'reset' })}
+                    className="link-underline text-body"
+                  >
+                    ثبت نوبت جدید
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div key={state.step} className="animate-rise motion-reduce:animate-none">
+                {state.step === 0 && (
+                  <fieldset>
+                    <legend className="text-lead font-light text-ink">
+                      کجا خدمات را دریافت کنیم؟
+                    </legend>
+                    <div className="mt-8 grid gap-4 sm:grid-cols-2 sm:gap-6">
+                      {LOCATIONS.map((l) => (
+                        <OptionCard
+                          key={l.key}
+                          name="location"
+                          value={l.key}
+                          checked={state.location === l.key}
+                          onSelect={(v) => dispatch({ type: 'choose', key: 'location', value: v })}
+                          title={l.title}
+                          latin={l.latin}
+                          note={l.note}
+                        />
+                      ))}
+                    </div>
+                  </fieldset>
+                )}
+
+                {state.step === 1 && (
+                  <fieldset>
+                    <legend className="text-lead font-light text-ink">
+                      کدام خدمت را می‌خواهید؟
+                    </legend>
+                    <div className="mt-8 grid gap-4 sm:grid-cols-2 sm:gap-6">
+                      {SERVICE_OPTIONS.map((s) => (
+                        <OptionCard
+                          key={s.key}
+                          name="service"
+                          value={s.key}
+                          checked={state.service === s.key}
+                          onSelect={(v) => dispatch({ type: 'choose', key: 'service', value: v })}
+                          title={s.title}
+                          note={s.note}
+                        />
+                      ))}
+                    </div>
+                  </fieldset>
+                )}
+
+                {state.step === 2 && (
+                  <div>
+                    <p className="text-lead font-light text-ink">
+                      چه روز و چه ساعتی برای شما مناسب است؟
+                    </p>
+                    <div className="mt-8 grid gap-8 lg:grid-cols-[auto_1fr] lg:gap-12">
+                      <div className="lg:w-[19rem]">
+                        <DatePicker
+                          value={state.date}
+                          onChange={(iso) => dispatch({ type: 'choose', key: 'date', value: iso })}
+                        />
+                      </div>
+
+                      <fieldset className="min-w-0">
+                        <legend className="text-eyebrow text-muted">ساعت‌های آزاد</legend>
+                        <div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4">
+                          {SLOTS.map((t) => (
+                            <label
+                              key={t}
+                              className="flex h-12 cursor-pointer items-center justify-center border border-line text-body text-ink transition-colors duration-300 has-checked:border-fill has-checked:bg-fill has-checked:text-on-fill has-focus-visible:outline-2 has-focus-visible:outline-offset-4 has-focus-visible:outline-ink hover:border-fill"
+                            >
+                              <input
+                                type="radio"
+                                name="time"
+                                value={t}
+                                checked={state.time === t}
+                                disabled={!state.date}
+                                onChange={() => dispatch({ type: 'choose', key: 'time', value: t })}
+                                className="sr-only"
+                              />
+                              {toFa(t)}
+                            </label>
+                          ))}
+                        </div>
+                        {!state.date && (
+                          <p className="mt-5 text-body font-light text-muted">
+                            ابتدا از تقویم، یک تاریخ انتخاب کنید.
+                          </p>
+                        )}
+                      </fieldset>
+                    </div>
+                  </div>
+                )}
+
+                {state.step === 3 && (
+                  <div>
+                    <p className="text-lead font-light text-ink">
+                      برای هماهنگی، اطلاعات تماس شما
+                    </p>
+                    <div className="mt-8 grid gap-6 sm:grid-cols-2">
+                      <div className="block">
+                        <label htmlFor="booking-name" className="block text-eyebrow text-muted">
+                          نام و نام خانوادگی
+                        </label>
+                        <input
+                          id="booking-name"
+                          type="text"
+                          value={state.name}
+                          onChange={(e) => dispatch({ type: 'text', key: 'name', value: e.target.value })}
+                          placeholder="مثلاً مریم رضایی"
+                          className="field mt-3"
+                          autoComplete="name"
+                        />
+                      </div>
+
+                      <div className="block">
+                        <label htmlFor="booking-phone" className="block text-eyebrow text-muted">
+                          شماره تماس
+                        </label>
+                        <input
+                          id="booking-phone"
+                          type="tel"
+                          value={state.phone}
+                          onChange={(e) => dispatch({ type: 'text', key: 'phone', value: e.target.value })}
+                          placeholder="09121234567"
+                          className="field mt-3 text-start"
+                          autoComplete="tel"
+                          inputMode="tel"
+                          dir="ltr"
+                          aria-invalid={contactError || undefined}
+                          aria-describedby={contactError ? 'booking-phone-error' : undefined}
+                        />
+                        {contactError && (
+                          <span id="booking-phone-error" className="mt-2 block text-body text-muted">
+                            شماره را به شکل 09121234567 وارد کنید.
+                          </span>
+                        )}
+                      </div>
+
+                      {home && (
+                        <div className="block sm:col-span-2">
+                          <label htmlFor="booking-address" className="block text-eyebrow text-muted">
+                            نشانی منزل
+                          </label>
+                          <input
+                            id="booking-address"
+                            type="text"
+                            value={state.address}
+                            onChange={(e) => dispatch({ type: 'text', key: 'address', value: e.target.value })}
+                            placeholder="منطقه، خیابان، پلاک و کوچه"
+                            className="field mt-3"
+                            autoComplete="street-address"
+                            aria-invalid={addressError || undefined}
+                            aria-describedby={addressError ? 'booking-address-error' : undefined}
+                          />
+                          {addressError && (
+                            <span id="booking-address-error" className="mt-2 block text-body text-muted">
+                              نشانی را کامل‌تر بنویسید.
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-12 flex flex-wrap items-center gap-4">
+                  {state.step > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => dispatch({ type: 'back' })}
+                      className="pill h-14 border border-line bg-transparent px-8 hover:border-fill"
+                    >
+                      مرحله قبل
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={goNext}
+                    disabled={!stepValid[state.step]}
+                    className="pill h-14 px-8 disabled:cursor-not-allowed disabled:opacity-35"
+                  >
+                    {state.step === 3 ? 'ثبت نهایی' : 'مرحله بعد'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
