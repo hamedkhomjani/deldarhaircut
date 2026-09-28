@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "license": "MIT",
+  "author": "Hamed Khomjani (UX/UI designer and developer)",
+  "description": "Persian RTL site and booking flow for Deldar Haircut",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

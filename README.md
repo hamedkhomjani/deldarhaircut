@@ -90,6 +90,12 @@ are already in the repo:
 For any other host, add the equivalent rewrite yourself. Without it, links to `/booking` will 404
 on refresh even though client-side navigation works.
 
+## License
+
+MIT — see [`LICENSE`](LICENSE). Copyright © 2026 Hamideh Deldar (website owner); design and
+development by Hamed Khomjani. The file carries the English MIT text plus an unofficial Persian
+translation for convenience, with the English marked as authoritative in case of any discrepancy.
+
 ## Contact details
 
 `src/site.ts` has `phone: ''`. Until a real number is filled in:
