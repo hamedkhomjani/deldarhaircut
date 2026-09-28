@@ -50,8 +50,10 @@ export default function DatePicker({ value, onChange }: Props) {
       return { y, m: next }
     })
 
-  const atCurrentMonth = cursor.y === persianParts(new Date(`${today}T00:00:00Z`)).y &&
-    cursor.m === persianParts(new Date(`${today}T00:00:00Z`)).m
+  const todayParts = persianParts(new Date(`${today}T00:00:00Z`))
+  const monthsDiff = (cursor.y - todayParts.y) * 12 + (cursor.m - todayParts.m)
+  const atCurrentMonth = monthsDiff <= 0
+  const atMaxMonth = monthsDiff >= 12
 
   return (
     <div className="border border-line p-5 sm:p-7">
@@ -59,8 +61,9 @@ export default function DatePicker({ value, onChange }: Props) {
         <button
           type="button"
           onClick={() => shift(-1)}
-          className="flex size-10 items-center justify-center border border-line text-ink transition-colors duration-300 hover:border-fill"
+          className="flex size-10 items-center justify-center border border-line text-ink transition-colors duration-300 hover:border-fill disabled:opacity-30"
           aria-label="ماه قبل"
+          disabled={atCurrentMonth}
         >
           <svg
             viewBox="0 0 24 24"
@@ -83,7 +86,7 @@ export default function DatePicker({ value, onChange }: Props) {
           onClick={() => shift(1)}
           className="flex size-10 items-center justify-center border border-line text-ink transition-colors duration-300 hover:border-fill disabled:opacity-30"
           aria-label="ماه بعد"
-          disabled={atCurrentMonth}
+          disabled={atMaxMonth}
         >
           <svg
             viewBox="0 0 24 24"

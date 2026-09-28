@@ -129,12 +129,12 @@ are easy to change in `WEEKEND` / `FIXED_HOLIDAYS`.
 
 ## Open questions
 
-Two behaviours are working as coded but may not be what you want:
+Three behaviours are working as coded but may not be what you want:
 
-- **The calendar only offers the current Jalali month.** "ماه بعد" is disabled at the current
-  month, so from a fresh visit the only bookable dates are today onward within this month, and
-  "ماه قبل" leads to a fully disabled past month. If you want forward booking, lift the
-  `disabled={atCurrentMonth}` guard in `DatePicker.tsx`.
+- **Forward booking is capped at 12 months.** "ماه بعد" is enabled up to a year ahead and "ماه قبل"
+  is disabled at the current Jalali month, so clients cannot book into the past and cannot wander
+  arbitrarily far into the future. Both bounds are computed in `DatePicker.tsx` via `monthsDiff`
+  against today; widen or narrow the `atMaxMonth` limit there.
 - **The portfolio before/after reveal is hover-only.** The "before" image sits at `opacity-0` and
   appears via `group-hover` (plus `group-focus`, which covers keyboard users). Touch devices have
   no hover, so on a phone the before image is never shown.
