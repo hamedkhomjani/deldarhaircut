@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { site } from '../site.ts'
 
 type Look = {
@@ -57,12 +57,14 @@ const looks: Look[] = [
 
 function Tile({ look }: { look: Look }) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const [showBefore, setShowBefore] = useState(false)
 
   return (
     <figure
       tabIndex={0}
-      aria-label={`${look.title} — نمایش قبل و بعد`}
-      className="group relative overflow-hidden border border-line bg-canvas transition-colors duration-500 hover:border-fill focus:border-fill"
+      aria-label={`${look.title} — لمس یا نگه داشتن برای قبل و بعد`}
+      onClick={() => setShowBefore((prev) => !prev)}
+      className="group relative cursor-pointer overflow-hidden border border-line bg-canvas transition-colors duration-500 hover:border-fill focus:border-fill select-none"
       onMouseEnter={() => videoRef.current?.play().catch(() => {})}
       onMouseLeave={() => {
         const v = videoRef.current
@@ -83,11 +85,12 @@ function Tile({ look }: { look: Look }) {
 
         <img
           src={look.before}
-          alt=""
+          alt={`مدل ${look.title} پیش از خدمات`}
           width={800}
           height={1000}
-          aria-hidden
-          className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700 group-hover:opacity-100 group-focus:opacity-100"
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 group-hover:opacity-100 group-focus:opacity-100 ${
+            showBefore ? 'opacity-100' : 'opacity-0'
+          }`}
         />
 
         {look.video && (
@@ -104,8 +107,8 @@ function Tile({ look }: { look: Look }) {
           />
         )}
 
-        <span className="absolute top-4 start-4 bg-canvas/90 px-3 py-1.5 text-eyebrow text-ink">
-          قبل / بعد
+        <span className="absolute top-4 start-4 bg-canvas/90 px-3 py-1.5 text-eyebrow text-ink shadow-sm">
+          {showBefore ? 'پیش از خدمات (قبل)' : 'پس از خدمات (بعد — لمس برای قبل)'}
         </span>
       </div>
 

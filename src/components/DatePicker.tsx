@@ -55,9 +55,11 @@ export default function DatePicker({ value, onChange }: Props) {
   const atCurrentMonth = monthsDiff <= 0
   const atMaxMonth = monthsDiff >= 12
 
+  const jumpToToday = () => setCursor({ y: todayParts.y, m: todayParts.m })
+
   return (
     <div className="border border-line p-5 sm:p-7">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-2">
         <button
           type="button"
           onClick={() => shift(-1)}
@@ -77,9 +79,20 @@ export default function DatePicker({ value, onChange }: Props) {
           </svg>
         </button>
 
-        <p className="font-display text-xl font-medium text-title" aria-live="polite">
-          {monthLabel(cursor.y, cursor.m)}
-        </p>
+        <div className="flex flex-col items-center gap-1">
+          <p className="font-display text-xl font-medium text-title" aria-live="polite">
+            {monthLabel(cursor.y, cursor.m)}
+          </p>
+          {!atCurrentMonth && (
+            <button
+              type="button"
+              onClick={jumpToToday}
+              className="text-eyebrow text-muted underline underline-offset-4 transition-colors hover:text-ink"
+            >
+              بازگشت به امروز
+            </button>
+          )}
+        </div>
 
         <button
           type="button"
@@ -124,27 +137,36 @@ export default function DatePicker({ value, onChange }: Props) {
               const isToday = iso === today
               const { closed, reason } = dayStatus(iso)
               return (
-                <div key={iso} role="gridcell" aria-selected={selected}>
+                <div key={iso} role="gridcell" aria-selected={selected} className="group relative">
                   <button
                     type="button"
                     disabled={past}
-                    // never colour-only: the reason is spelled out for screen readers and in
-                    // the tooltip, so a closed day is identifiable without seeing red
                     aria-label={reason ? `${longLabel(iso)} — ${reason}` : longLabel(iso)}
-                    title={reason ?? undefined}
                     onClick={() => onChange(iso)}
                     className={`flex aspect-square w-full items-center justify-center text-body transition-colors duration-300 ${
                       past
                         ? 'cursor-not-allowed text-disabled'
                         : selected
-                          ? 'bg-fill text-on-fill'
+                          ? 'bg-fill text-on-fill font-medium'
                           : closed
-                            ? 'bg-closed/10 text-closed hover:bg-closed/15'
+                            ? 'bg-closed/10 text-closed hover:bg-closed/15 font-medium'
                             : 'text-ink hover:bg-wash'
-                    } ${isToday && !selected ? 'ring-1 ring-inset ring-ink' : ''}`}
+                    } ${isToday && !selected ? 'ring-1 ring-inset ring-ink font-semibold' : ''}`}
                   >
                     {toFa(persianParts(new Date(`${iso}T00:00:00Z`)).d)}
                   </button>
+
+                  {/* Accessible hover tooltip for closed/holiday reason */}
+                  {reason && !past && (
+                    <div
+                      role="tooltip"
+                      className="pointer-events-none absolute bottom-full start-1/2 z-20 mb-2 -translate-x-1/2 opacity-0 transition-all duration-200 group-hover:opacity-100 group-focus-within:opacity-100"
+                    >
+                      <div className="whitespace-nowrap border border-line bg-canvas px-2.5 py-1 text-[11px] leading-tight font-medium text-ink shadow-md">
+                        {reason}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )
             })}

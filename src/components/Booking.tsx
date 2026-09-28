@@ -90,7 +90,11 @@ const SERVICE_OPTIONS: { key: ServiceKey; title: string; note: string }[] = [
   { key: 'package', title: 'کوتاهی + براشینگ', note: 'پکیج کامل، با تخفیف ویژه' },
 ]
 
-const SLOTS = Array.from({ length: 12 }, (_, i) => `${String(9 + i).padStart(2, '0')}:00`)
+const SLOT_GROUPS = [
+  { label: 'صبح', slots: ['09:00', '10:00', '11:00', '12:00'] },
+  { label: 'عصر', slots: ['13:00', '14:00', '15:00', '16:00', '17:00'] },
+  { label: 'غروب', slots: ['18:00', '19:00', '20:00'] },
+]
 
 const SERVICE_LABEL: Record<ServiceKey, string> = {
   cut: 'کوتاهی تخصصی',
@@ -370,6 +374,25 @@ export default function Booking({ initialLocation = null }: { initialLocation?: 
                     <p className="text-lead font-light text-ink">
                       چه روز و چه ساعتی برای شما مناسب است؟
                     </p>
+
+                    {state.date && (
+                      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border border-line bg-wash p-4 text-body text-ink">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-block size-2 rounded-full bg-fill" aria-hidden="true" />
+                          <span>
+                            تاریخ انتخابی: <strong>{longLabel(state.date)}</strong>
+                          </span>
+                        </div>
+                        {state.time ? (
+                          <div className="text-body font-medium text-title">
+                            ساعت <strong>{toFa(state.time)}</strong>
+                          </div>
+                        ) : (
+                          <span className="text-eyebrow text-muted">ساعت را انتخاب کنید</span>
+                        )}
+                      </div>
+                    )}
+
                     <div className="mt-8 grid gap-8 lg:grid-cols-[auto_1fr] lg:gap-12">
                       <div className="lg:w-[19rem]">
                         <DatePicker
@@ -380,29 +403,37 @@ export default function Booking({ initialLocation = null }: { initialLocation?: 
 
                       <fieldset className="min-w-0">
                         <legend className="text-eyebrow text-muted">ساعت‌های آزاد</legend>
-                        <div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4">
-                          {SLOTS.map((t) => (
-                            <label
-                              key={t}
-                              className="flex h-12 cursor-pointer items-center justify-center border border-line text-body text-ink transition-colors duration-300 has-checked:border-fill has-checked:bg-fill has-checked:text-on-fill has-focus-visible:outline-2 has-focus-visible:outline-offset-4 has-focus-visible:outline-ink hover:border-fill"
-                            >
-                              <input
-                                type="radio"
-                                name="time"
-                                value={t}
-                                checked={state.time === t}
-                                disabled={!state.date}
-                                onChange={() => dispatch({ type: 'choose', key: 'time', value: t })}
-                                className="sr-only"
-                              />
-                              {toFa(t)}
-                            </label>
-                          ))}
-                        </div>
-                        {!state.date && (
+                        {!state.date ? (
                           <p className="mt-5 text-body font-light text-muted">
                             ابتدا از تقویم، یک تاریخ انتخاب کنید.
                           </p>
+                        ) : (
+                          <div className="mt-6 space-y-6">
+                            {SLOT_GROUPS.map((group) => (
+                              <div key={group.label}>
+                                <p className="mb-2 text-eyebrow text-muted">{group.label}</p>
+                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4">
+                                  {group.slots.map((t) => (
+                                    <label
+                                      key={t}
+                                      className="flex h-12 cursor-pointer items-center justify-center border border-line text-body text-ink transition-colors duration-300 has-checked:border-fill has-checked:bg-fill has-checked:text-on-fill has-focus-visible:outline-2 has-focus-visible:outline-offset-4 has-focus-visible:outline-ink hover:border-fill"
+                                    >
+                                      <input
+                                        type="radio"
+                                        name="time"
+                                        value={t}
+                                        checked={state.time === t}
+                                        disabled={!state.date}
+                                        onChange={() => dispatch({ type: 'choose', key: 'time', value: t })}
+                                        className="sr-only"
+                                      />
+                                      {toFa(t)}
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </fieldset>
                     </div>
