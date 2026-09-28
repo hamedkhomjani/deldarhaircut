@@ -5,7 +5,7 @@ import { normalizePhone, phoneValid } from '../lib/phone.ts'
 import { site } from '../site.ts'
 
 type LocationKey = 'studio' | 'home'
-export type { LocationKey }
+export type { LocationKey, ServiceKey }
 type ServiceKey = 'cut' | 'blowdry' | 'package'
 
 type State = {
@@ -169,11 +169,28 @@ function OptionCard({
   )
 }
 
-export default function Booking({ initialLocation = null }: { initialLocation?: LocationKey | null }) {
-  const [state, dispatch] = useReducer(reducer, { initialLocation }, (seed) => ({
-    ...initial,
-    location: seed.initialLocation,
-  }))
+export default function Booking({
+  initialLocation = null,
+  initialService = null,
+}: {
+  initialLocation?: LocationKey | null
+  initialService?: ServiceKey | null
+}) {
+  const [state, dispatch] = useReducer(
+    reducer,
+    { initialLocation, initialService },
+    (seed) => {
+      let step = 0
+      if (seed.initialLocation) step = 1
+      if (seed.initialLocation && seed.initialService) step = 2
+      return {
+        ...initial,
+        location: seed.initialLocation,
+        service: seed.initialService,
+        step,
+      }
+    },
+  )
   const panelRef = useRef<HTMLDivElement>(null)
 
   const home = state.location === 'home'
@@ -462,9 +479,19 @@ export default function Booking({ initialLocation = null }: { initialLocation?: 
                       </div>
 
                       <div className="block">
-                        <label htmlFor="booking-phone" className="block text-eyebrow text-muted">
-                          شماره تماس
-                        </label>
+                        <div className="flex items-center justify-between">
+                          <label htmlFor="booking-phone" className="block text-eyebrow text-muted">
+                            شماره تماس
+                          </label>
+                          {phoneValid(state.phone) && (
+                            <span className="flex items-center gap-1 text-[11px] font-medium text-ink">
+                              <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M20 6L9 17l-5-5" />
+                              </svg>
+                              معتبر
+                            </span>
+                          )}
+                        </div>
                         <input
                           id="booking-phone"
                           type="tel"

@@ -1,9 +1,9 @@
 import { Link } from '../lib/router.tsx'
 
 const services = [
-  'کوتاهی تخصصی مو',
-  'براشینگ و استایلینگ',
-  'پکیج اختصاصی کوتاهی + براشینگ',
+  { key: 'cut', title: 'کوتاهی تخصصی مو' },
+  { key: 'blowdry', title: 'براشینگ و استایلینگ' },
+  { key: 'package', title: 'پکیج اختصاصی کوتاهی + براشینگ' },
 ]
 
 const cards = [
@@ -75,11 +75,14 @@ export default function Services() {
 
               <ul className="mt-10 space-y-0 border-t border-line">
                 {services.map((service) => (
-                  <li
-                    key={service}
-                    className="border-b border-line py-4 text-body font-light text-ink"
-                  >
-                    {service}
+                  <li key={service.key} className="border-b border-line">
+                    <Link
+                      href={`/booking?loc=${card.loc}&service=${service.key}`}
+                      className="flex items-center justify-between py-4 text-body font-light text-ink transition-colors hover:text-title"
+                    >
+                      <span>{service.title}</span>
+                      <span className="text-xs text-muted">رزرو ←</span>
+                    </Link>
                   </li>
                 ))}
               </ul>
