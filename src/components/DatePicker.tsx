@@ -154,7 +154,7 @@ export default function DatePicker({ value, onChange }: Props) {
 
       <p className="mt-5 flex items-center gap-2 text-eyebrow text-muted">
         <span className="inline-block size-2 shrink-0 rounded-full bg-closed" aria-hidden="true" />
-        <span>تعطیل رسمی و روزهای آخر هفته</span>
+        <span>تعطیل رسمی و جمعه‌ها</span>
       </p>
     </div>
   )
