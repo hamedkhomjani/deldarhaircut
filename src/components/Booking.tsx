@@ -484,7 +484,7 @@ export default function Booking({
                           value={state.name}
                           onChange={(e) => dispatch({ type: 'text', key: 'name', value: e.target.value })}
                           placeholder="مثلاً مریم رضایی"
-                          className="field mt-2 sm:mt-3"
+                          className="field mt-2.5 sm:mt-3"
                           autoComplete="name"
                         />
                       </div>
@@ -509,7 +509,7 @@ export default function Booking({
                           value={state.phone}
                           onChange={(e) => dispatch({ type: 'text', key: 'phone', value: e.target.value })}
                           placeholder="09121234567"
-                          className="field mt-2 text-start sm:mt-3"
+                          className="field mt-2.5 text-start sm:mt-3"
                           autoComplete="tel"
                           inputMode="tel"
                           dir="ltr"
@@ -517,7 +517,7 @@ export default function Booking({
                           aria-describedby={contactError ? 'booking-phone-error' : undefined}
                         />
                         {contactError && (
-                          <span id="booking-phone-error" className="mt-1.5 block text-[0.875rem] text-muted sm:mt-2 sm:text-body">
+                          <span id="booking-phone-error" className="mt-2 block text-[0.875rem] text-closed sm:text-body">
                             شماره را به شکل 09121234567 وارد کنید.
                           </span>
                         )}
@@ -534,13 +534,13 @@ export default function Booking({
                             value={state.address}
                             onChange={(e) => dispatch({ type: 'text', key: 'address', value: e.target.value })}
                             placeholder="منطقه، خیابان، پلاک و کوچه"
-                            className="field mt-2 sm:mt-3"
+                            className="field mt-2.5 sm:mt-3"
                             autoComplete="street-address"
                             aria-invalid={addressError || undefined}
                             aria-describedby={addressError ? 'booking-address-error' : undefined}
                           />
                           {addressError && (
-                            <span id="booking-address-error" className="mt-1.5 block text-[0.875rem] text-muted sm:mt-2 sm:text-body">
+                            <span id="booking-address-error" className="mt-2 block text-[0.875rem] text-closed sm:text-body">
                               نشانی را کامل‌تر بنویسید.
                             </span>
                           )}

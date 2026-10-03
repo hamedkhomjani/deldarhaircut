@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { site } from '../site.ts'
 
 type Look = {
@@ -7,7 +7,6 @@ type Look = {
   style: string
   before: string
   after: string
-  video?: string
 }
 
 const looks: Look[] = [
@@ -56,28 +55,32 @@ const looks: Look[] = [
 ]
 
 function Tile({ look }: { look: Look }) {
-  const videoRef = useRef<HTMLVideoElement>(null)
   const [showBefore, setShowBefore] = useState(false)
+  const toggle = () => setShowBefore((prev) => !prev)
 
   return (
     <figure
+      // role=button because this is a real toggle: a bare tabIndex on a <figure> announces
+      // as a group and leaves AT users with no way to flip the image
+      role="button"
       tabIndex={0}
-      aria-label={`${look.title} — لمس یا نگه داشتن برای قبل و بعد`}
-      onClick={() => setShowBefore((prev) => !prev)}
-      className="group relative cursor-pointer overflow-hidden border border-line bg-canvas transition-colors duration-500 hover:border-fill focus:border-fill select-none"
-      onMouseEnter={() => videoRef.current?.play().catch(() => {})}
-      onMouseLeave={() => {
-        const v = videoRef.current
-        if (v) {
-          v.pause()
-          v.currentTime = 0
-        }
+      aria-label={`${look.title} — نمایش تصویر ${showBefore ? 'پس از خدمات' : 'پیش از خدمات'}`}
+      onClick={toggle}
+      onKeyDown={(e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return
+        e.preventDefault()
+        toggle()
       }}
+      className="group relative cursor-pointer overflow-hidden border border-line bg-canvas transition-colors duration-500 hover:border-fill focus:border-fill select-none"
     >
       <div className="relative aspect-4/5 w-full">
+        {/* Exactly one image is exposed to AT at a time, so the announced state always
+            matches the visible one — both alts used to sit in the tree and contradict
+            each other once the tile was flipped. */}
         <img
           src={look.after}
-          alt={`مدل ${look.title} پس از خدمات`}
+          alt={showBefore ? '' : `مدل ${look.title} پس از خدمات`}
+          aria-hidden={showBefore}
           width={800}
           height={1000}
           className="absolute inset-0 h-full w-full object-cover"
@@ -85,31 +88,20 @@ function Tile({ look }: { look: Look }) {
 
         <img
           src={look.before}
-          alt={`مدل ${look.title} پیش از خدمات`}
+          alt={showBefore ? `مدل ${look.title} پیش از خدمات` : ''}
+          aria-hidden={!showBefore}
           width={800}
           height={1000}
-          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 group-hover:opacity-100 group-focus:opacity-100 ${
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
             showBefore ? 'opacity-100' : 'opacity-0'
           }`}
         />
 
-        {look.video && (
-          <video
-            ref={videoRef}
-            src={look.video}
-            poster={look.after}
-            muted
-            loop
-            playsInline
-            preload="none"
-            aria-hidden
-            className="absolute inset-0 hidden h-full w-full object-cover"
-          />
-        )}
-
-        {/* Label — compact on mobile, normal on sm+ */}
-        <span className="absolute top-2.5 start-2.5 bg-canvas/90 px-2 py-1 text-[0.6875rem] tracking-[0.2em] leading-tight font-medium text-ink shadow-sm uppercase sm:top-4 sm:start-4 sm:px-3 sm:py-1.5 sm:text-eyebrow">
-          {showBefore ? 'قبل' : 'بعد — لمس برای قبل'}
+        {/* Driven by showBefore alone. This used to add `group-hover:opacity-100`, which
+            swapped the image out from under a label that never changed — hovering showed
+            "قبل" while the badge still read "بعد". */}
+        <span className="absolute top-2.5 start-2.5 bg-canvas/90 px-2 py-1 text-[0.6875rem] tracking-[0.2em] leading-tight font-medium text-ink shadow-sm sm:top-4 sm:start-4 sm:px-3 sm:py-1.5 sm:text-eyebrow">
+          {showBefore ? 'قبل · لمس برای بعد' : 'بعد · لمس برای قبل'}
         </span>
       </div>
 

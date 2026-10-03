@@ -107,13 +107,18 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile overlay backdrop */}
-      <div
-        className={`fixed inset-0 top-16 z-40 bg-ink/20 backdrop-blur-sm transition-opacity duration-300 sm:top-20 lg:hidden ${
+      {/* Mobile overlay backdrop. A real <button>, not a div: the div carried onClick
+          while aria-hidden, so it was an interactive control AT could neither find nor
+          activate. `inert` mirrors the panel below and keeps it out of the tab order
+          while closed. */}
+      <button
+        type="button"
+        inert={!open}
+        aria-label="بستن منو"
+        onClick={() => setOpenedAt(null)}
+        className={`fixed inset-0 top-16 z-40 cursor-default bg-ink/20 backdrop-blur-sm transition-opacity duration-300 sm:top-20 lg:hidden ${
           open ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
-        onClick={() => setOpenedAt(null)}
-        aria-hidden="true"
       />
 
       {/* Mobile slide-down menu — absolutely positioned to avoid reflowing the page */}
