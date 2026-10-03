@@ -29,26 +29,29 @@ const cards = [
 
 export default function Services() {
   return (
-    <section id="services" className="scroll-mt-24">
-      <div className="container-lux pt-24 pb-24 lg:pt-32 lg:pb-40">
-        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-20">
+    <section id="services" className="scroll-mt-16 sm:scroll-mt-20 lg:scroll-mt-24">
+      {/* Mobile-first vertical rhythm: tighter padding on small screens */}
+      <div className="container-lux pt-16 pb-16 sm:pt-20 sm:pb-20 lg:pt-32 lg:pb-40">
+        {/* Header — single column on mobile, side-by-side on lg+ */}
+        <div className="grid gap-6 sm:gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-20">
           <div>
             <p className="text-eyebrow text-muted">خدمات</p>
-            <h2 className="mt-7 font-display text-[clamp(2rem,5.5vw,2.5rem)] leading-[1.55] font-medium text-balance text-title">
+            <h2 className="mt-4 font-display text-[clamp(1.75rem,5.5vw,2.5rem)] leading-[1.55] font-medium text-balance text-title sm:mt-5 md:mt-7">
               کجا موهایتان را کوتاه کنیم؟
             </h2>
           </div>
-          <p className="max-w-xl text-lead font-light text-ink lg:pb-2">
+          <p className="max-w-xl text-[1.0625rem] leading-8 font-light text-ink sm:text-lead lg:pb-2">
             دو راه برای نوبت: استودیو یا خانه‌ی خودتان. در هر دو حالت، برش و
             براشینگ با یک استاندارد و توسط خودم انجام می‌شود.
           </p>
         </div>
 
-        <div className="mt-16 grid gap-6 lg:mt-24 lg:grid-cols-2 lg:gap-8">
+        {/* Cards — stacked on mobile, side-by-side on lg+ */}
+        <div className="mt-10 grid gap-4 sm:mt-12 sm:gap-6 lg:mt-24 lg:grid-cols-2 lg:gap-8">
           {cards.map((card) => (
             <article
               key={card.title}
-              className={`group flex flex-col border border-line p-8 transition-colors duration-500 hover:border-fill sm:p-10 lg:p-12 ${
+              className={`group flex flex-col border border-line p-6 transition-colors duration-500 hover:border-fill sm:p-8 md:p-10 lg:p-12 ${
                 card.tag ? 'bg-wash' : 'bg-canvas'
               }`}
             >
@@ -61,24 +64,25 @@ export default function Services() {
                 )}
               </div>
 
-              <h3 className="mt-10 font-display text-3xl leading-[1.6] font-medium text-title sm:text-4xl">
+              <h3 className="mt-6 font-display text-2xl leading-[1.6] font-medium text-title sm:mt-8 sm:text-3xl md:mt-10 md:text-4xl">
                 {card.title}
               </h3>
 
-              <p className="mt-2 font-latin text-sm tracking-[0.2em] text-muted uppercase">
+              <p className="mt-1.5 font-latin text-sm tracking-[0.2em] text-muted uppercase sm:mt-2">
                 {card.latin}
               </p>
 
-              <p className="mt-8 max-w-md text-body leading-8 font-light text-ink">
+              <p className="mt-5 max-w-md text-body leading-8 font-light text-ink sm:mt-6 md:mt-8">
                 {card.body}
               </p>
 
-              <ul className="mt-10 space-y-0 border-t border-line">
+              {/* Service list */}
+              <ul className="mt-6 space-y-0 border-t border-line sm:mt-8 md:mt-10">
                 {services.map((service) => (
                   <li key={service.key} className="border-b border-line">
                     <Link
                       href={`/booking?loc=${card.loc}&service=${service.key}`}
-                      className="flex items-center justify-between py-4 text-body font-light text-ink transition-colors hover:text-title"
+                      className="flex items-center justify-between py-3.5 text-body font-light text-ink transition-colors hover:text-title sm:py-4"
                     >
                       <span>{service.title}</span>
                       <span className="text-xs text-muted">رزرو ←</span>
@@ -89,7 +93,7 @@ export default function Services() {
 
               <Link
                 href={`/booking?loc=${card.loc}`}
-                className="link-underline mt-12 text-body"
+                className="link-underline mt-8 text-body sm:mt-10 md:mt-12"
                 aria-label={card.cta}
               >
                 {card.cta}

@@ -20,22 +20,24 @@ const phoneIcon = (
 export default function Footer() {
   return (
     <footer className="bg-dusk text-dusk-ink">
-      <div className="container-lux pt-20 pb-10 lg:pt-28">
-        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:gap-20">
+      <div className="container-lux pt-14 pb-8 sm:pt-16 sm:pb-10 lg:pt-28">
+        {/* Header + CTAs — stacked on mobile, side-by-side on lg+ */}
+        <div className="grid gap-8 sm:gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:gap-20">
           <div>
             <p className="text-eyebrow text-dusk-muted">تماس</p>
-            <h2 className="mt-7 font-display text-[clamp(1.9rem,5vw,2.5rem)] leading-[1.55] font-medium text-balance text-dusk-ink">
+            <h2 className="mt-4 font-display text-[clamp(1.6rem,5vw,2.5rem)] leading-[1.55] font-medium text-balance text-dusk-ink sm:mt-5 md:mt-7">
               برای نوبت، پیام بدهید
             </h2>
           </div>
 
-          <div className="flex flex-col items-start gap-4 lg:items-end">
-            <div className="flex flex-wrap gap-4 lg:justify-end">
+          <div className="flex flex-col items-stretch gap-3 sm:items-start sm:gap-4 lg:items-end">
+            {/* CTAs — full-width stacked on mobile, wrap on sm+ */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4 lg:justify-end">
               <a
                 href={site.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="pill h-14 gap-3 px-8"
+                className="pill h-12 gap-3 px-6 sm:h-14 sm:px-8"
               >
                 {instagramIcon}
                 {site.instagramHandle}
@@ -44,7 +46,7 @@ export default function Footer() {
               {site.phone ? (
                 <a
                   href={`tel:${site.phone}`}
-                  className="pill h-14 gap-3 px-8"
+                  className="pill h-12 gap-3 px-6 sm:h-14 sm:px-8"
                   aria-label={`تماس تلفنی ${site.phone}`}
                 >
                   {phoneIcon}
@@ -54,7 +56,7 @@ export default function Footer() {
                 <span
                   aria-disabled="true"
                   title="شماره تماس هنوز منتشر نشده است"
-                  className="inline-flex h-14 cursor-not-allowed items-center justify-center gap-3 rounded-full border border-dusk-muted/40 px-8 text-body whitespace-nowrap text-dusk-muted"
+                  className="inline-flex h-12 cursor-not-allowed items-center justify-center gap-3 rounded-full border border-dusk-muted/40 px-6 text-body whitespace-nowrap text-dusk-muted sm:h-14 sm:px-8"
                 >
                   {phoneIcon}
                   شماره تماس
@@ -67,7 +69,8 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-16 flex flex-col-reverse items-start gap-4 border-t border-dusk-muted/25 pt-8 sm:flex-row sm:items-center sm:justify-between">
+        {/* Bottom bar */}
+        <div className="mt-10 flex flex-col-reverse items-start gap-3 border-t border-dusk-muted/25 pt-6 sm:mt-16 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:pt-8">
           <p className="font-latin text-sm tracking-[0.18em] text-dusk-muted uppercase">
             &copy; {year} {site.latinName}
           </p>

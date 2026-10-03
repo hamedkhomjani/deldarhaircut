@@ -36,6 +36,18 @@ export default function Navbar() {
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [open])
+
   return (
     <header
       className={`sticky top-0 z-50 transition-all duration-500 ${
@@ -46,10 +58,11 @@ export default function Navbar() {
     >
       <nav
         aria-label="ناوبری اصلی"
-        className="container-lux flex h-20 items-center justify-between gap-4 sm:h-24"
+        className="container-lux flex h-16 items-center justify-between gap-3 sm:h-20 lg:h-24"
       >
-        <Link href={onBooking ? '/' : '/#top'} className="group flex shrink-0 items-baseline gap-3">
-          <span className="font-display text-xl leading-none font-medium whitespace-nowrap text-ink transition-colors group-hover:text-muted sm:text-2xl">
+        {/* Brand — always visible */}
+        <Link href={onBooking ? '/' : '/#top'} className="group flex shrink-0 items-baseline gap-2 sm:gap-3">
+          <span className="font-display text-lg leading-none font-medium whitespace-nowrap text-ink transition-colors group-hover:text-muted sm:text-xl md:text-2xl">
             حمیده دلدار
           </span>
           <span className="hidden font-latin text-[0.7rem] tracking-[0.3em] text-muted uppercase lg:inline">
@@ -57,7 +70,8 @@ export default function Navbar() {
           </span>
         </Link>
 
-        <ul className="hidden items-center gap-10 md:flex">
+        {/* Desktop nav links — hidden on mobile/tablet */}
+        <ul className="hidden items-center gap-8 lg:flex xl:gap-10">
           {links.map((link) => (
             <li key={link.anchor ?? 'booking'}>
               <Link href={hrefFor(link.anchor)} className="link-quiet text-body">
@@ -67,11 +81,12 @@ export default function Navbar() {
           ))}
         </ul>
 
-        <div className="flex shrink-0 items-center gap-3">
+        {/* CTA + Hamburger */}
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <Link
             href="/booking"
             aria-current={onBooking ? 'page' : undefined}
-            className="pill h-9 px-6 text-body"
+            className="pill h-9 px-4 text-[0.875rem] sm:px-6 sm:text-body"
           >
             رزرو آنلاین
           </Link>
@@ -80,32 +95,41 @@ export default function Navbar() {
             onClick={() => setOpenedAt(open ? null : pathname)}
             aria-expanded={open}
             aria-label="منو"
-            className="flex h-9 w-9 flex-col items-center justify-center gap-1.5 rounded-full border border-line transition-colors hover:border-fill md:hidden"
+            className="flex h-9 w-9 flex-col items-center justify-center gap-1.5 rounded-full border border-line transition-colors hover:border-fill lg:hidden"
           >
             <span
-              className={`h-px w-4 bg-ink transition-transform ${open ? 'translate-y-[3.5px] rotate-45' : ''}`}
+              className={`h-px w-4 bg-ink transition-transform duration-300 ${open ? 'translate-y-[3.5px] rotate-45' : ''}`}
             />
             <span
-              className={`h-px w-4 bg-ink transition-transform ${open ? '-translate-y-[3.5px] -rotate-45' : ''}`}
+              className={`h-px w-4 bg-ink transition-transform duration-300 ${open ? '-translate-y-[3.5px] -rotate-45' : ''}`}
             />
           </button>
         </div>
       </nav>
 
-      {/* absolutely positioned: an in-flow panel would reflow the page and spoil anchor scrolls */}
+      {/* Mobile overlay backdrop */}
+      <div
+        className={`fixed inset-0 top-16 z-40 bg-ink/20 backdrop-blur-sm transition-opacity duration-300 sm:top-20 lg:hidden ${
+          open ? 'opacity-100' : 'pointer-events-none opacity-0'
+        }`}
+        onClick={() => setOpenedAt(null)}
+        aria-hidden="true"
+      />
+
+      {/* Mobile slide-down menu — absolutely positioned to avoid reflowing the page */}
       <div
         inert={!open}
-        className={`absolute inset-x-0 top-full overflow-hidden border-b border-line bg-canvas/95 shadow-lg shadow-ink/5 backdrop-blur-md transition-[max-height,opacity] duration-500 md:hidden ${
-          open ? 'max-h-72 opacity-100' : 'max-h-0 opacity-0'
+        className={`absolute inset-x-0 top-full z-50 overflow-hidden border-b border-line bg-canvas/95 shadow-lg shadow-ink/5 backdrop-blur-md transition-[max-height,opacity] duration-500 lg:hidden ${
+          open ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
-        <ul className="container-lux flex flex-col gap-1 py-6">
+        <ul className="container-lux flex flex-col gap-1 py-5 sm:py-6">
           {links.map((link) => (
             <li key={link.anchor ?? 'booking'}>
               <Link
                 href={hrefFor(link.anchor)}
                 onClick={() => setOpenedAt(null)}
-                className="block py-3 text-lead text-ink"
+                className="block py-3 text-lead text-ink transition-colors hover:text-muted active:text-title"
               >
                 {link.label}
               </Link>

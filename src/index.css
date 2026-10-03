@@ -23,7 +23,10 @@
   --color-dusk-ink: #f2efe9;
   --color-dusk-muted: #afaaa2;
 
-  /* Typography — scale lifted from the reference */
+  /* Typography — mobile-first scale. Base sizes are for ≤639px screens;
+     larger screens scale up via responsive Tailwind utilities in components.
+     This ensures every text element is comfortably readable on small phones
+     first, then progressively enhanced for tablets and desktops. */
   --font-sans:
     'Vazirmatn', ui-sans-serif, system-ui, 'Segoe UI', Tahoma, sans-serif;
   --font-display: 'Noto Naskh Arabic', 'Times New Roman', Georgia, serif;
@@ -70,11 +73,15 @@
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    /* Prevent horizontal overflow on mobile — a critical mobile-first guard */
+    overflow-x: hidden;
   }
 
   body {
     @apply bg-canvas font-sans text-body text-ink antialiased;
     text-rendering: optimizeLegibility;
+    /* Prevent horizontal scroll caused by absolutely positioned decorations */
+    overflow-x: hidden;
   }
 
   ::selection {
@@ -86,10 +93,23 @@
   :focus-visible {
     @apply outline-2 outline-solid outline-offset-4 outline-ink;
   }
+
+  /* Ensure touch targets are at least 44×44px on mobile (WCAG 2.5.5) */
+  @media (pointer: coarse) {
+    button,
+    a,
+    label,
+    input,
+    select,
+    textarea {
+      min-height: 44px;
+    }
+  }
 }
 
+/* Mobile-first container: tight padding on phones, expanding at breakpoints */
 @utility container-lux {
-  @apply mx-auto w-full max-w-6xl px-6 sm:px-10 lg:px-16;
+  @apply mx-auto w-full max-w-6xl px-4 sm:px-6 md:px-10 lg:px-16;
 }
 
 /* Reference-style pill: greige fill, black label, fully rounded, never wraps */
@@ -113,5 +133,5 @@
    emitted after the base layer, so it would beat the base `:focus-visible` rule
    and leave these inputs with only a border-colour change as the focus cue. */
 @utility field {
-  @apply w-full border border-fill bg-canvas px-5 py-4 text-body text-ink transition-colors duration-300 placeholder:text-muted focus:border-ink;
+  @apply w-full border border-fill bg-canvas px-4 py-3.5 text-body text-ink transition-colors duration-300 placeholder:text-muted focus:border-ink sm:px-5 sm:py-4;
 }

@@ -107,14 +107,16 @@ function Tile({ look }: { look: Look }) {
           />
         )}
 
-        <span className="absolute top-4 start-4 bg-canvas/90 px-3 py-1.5 text-eyebrow text-ink shadow-sm">
-          {showBefore ? 'پیش از خدمات (قبل)' : 'پس از خدمات (بعد — لمس برای قبل)'}
+        {/* Label — compact on mobile, normal on sm+ */}
+        <span className="absolute top-2.5 start-2.5 bg-canvas/90 px-2 py-1 text-[0.6875rem] tracking-[0.2em] leading-tight font-medium text-ink shadow-sm uppercase sm:top-4 sm:start-4 sm:px-3 sm:py-1.5 sm:text-eyebrow">
+          {showBefore ? 'قبل' : 'بعد — لمس برای قبل'}
         </span>
       </div>
 
-      <figcaption className="absolute inset-x-0 bottom-0 translate-y-full border-t border-line bg-canvas px-5 py-5 transition-transform duration-500 group-hover:translate-y-0 group-focus:translate-y-0">
+      {/* Caption — always visible on mobile (no hover), slide-up on desktop */}
+      <figcaption className="border-t border-line bg-canvas px-4 py-3.5 sm:px-5 sm:py-5 lg:absolute lg:inset-x-0 lg:bottom-0 lg:translate-y-full lg:transition-transform lg:duration-500 lg:group-hover:translate-y-0 lg:group-focus:translate-y-0">
         <p className="text-eyebrow text-muted">{look.style}</p>
-        <p className="mt-3 font-display text-xl leading-[1.7] font-medium text-ink">
+        <p className="mt-1.5 font-display text-lg leading-[1.7] font-medium text-ink sm:mt-3 sm:text-xl">
           {look.title}
         </p>
       </figcaption>
@@ -124,33 +126,36 @@ function Tile({ look }: { look: Look }) {
 
 export default function Portfolio() {
   return (
-    <section id="portfolio" className="scroll-mt-24">
-      <div className="container-lux pt-24 pb-24 lg:pt-32 lg:pb-40">
-        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-20">
+    <section id="portfolio" className="scroll-mt-16 sm:scroll-mt-20 lg:scroll-mt-24">
+      <div className="container-lux pt-16 pb-16 sm:pt-20 sm:pb-20 lg:pt-32 lg:pb-40">
+        {/* Header */}
+        <div className="grid gap-6 sm:gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-20">
           <div>
             <p className="text-eyebrow text-muted">نمونه‌کارها</p>
-            <h2 className="mt-7 font-display text-[clamp(2rem,5.5vw,2.5rem)] leading-[1.55] font-medium text-balance text-title">
+            <h2 className="mt-4 font-display text-[clamp(1.75rem,5.5vw,2.5rem)] leading-[1.55] font-medium text-balance text-title sm:mt-5 md:mt-7">
               قبل و بعد، بی‌صافی
             </h2>
           </div>
-          <p className="max-w-xl text-lead font-light text-ink lg:pb-2">
-            روی هر تصویر نگه دارید تا نسخه‌ی پیش از خدمات را ببینید. همه‌ی
+          <p className="max-w-xl text-[1.0625rem] leading-8 font-light text-ink sm:text-lead lg:pb-2">
+            روی هر تصویر لمس کنید تا نسخه‌ی پیش از خدمات را ببینید. همه‌ی
             مدل‌ها با مشاوره‌ی فرم صورت انتخاب می‌شوند.
           </p>
         </div>
 
-        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:mt-24 lg:grid-cols-3">
+        {/* Grid — 1 column on mobile, 2 on sm, 3 on lg */}
+        <div className="mt-10 grid gap-4 sm:mt-12 sm:grid-cols-2 sm:gap-6 lg:mt-24 lg:grid-cols-3">
           {looks.map((look) => (
             <Tile key={look.id} look={look} />
           ))}
         </div>
 
-        <div className="mt-16 flex justify-center lg:mt-24">
+        {/* Instagram CTA — full-width on mobile */}
+        <div className="mt-10 flex justify-center sm:mt-14 lg:mt-24">
           <a
             href={site.instagram}
             target="_blank"
             rel="noopener noreferrer"
-            className="pill h-14 max-w-full px-8 text-body"
+            className="pill h-12 w-full max-w-full px-6 text-[0.9375rem] sm:h-14 sm:w-auto sm:px-8 sm:text-body"
           >
             مشاهده نمونه‌کارهای بیشتر در اینستاگرام
           </a>

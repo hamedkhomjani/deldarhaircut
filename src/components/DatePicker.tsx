@@ -58,18 +58,19 @@ export default function DatePicker({ value, onChange }: Props) {
   const jumpToToday = () => setCursor({ y: todayParts.y, m: todayParts.m })
 
   return (
-    <div className="border border-line p-5 sm:p-7">
-      <div className="flex items-center justify-between gap-2">
+    <div className="border border-line p-3.5 sm:p-5 md:p-7">
+      {/* Month navigation — compact on mobile */}
+      <div className="flex items-center justify-between gap-1.5 sm:gap-2">
         <button
           type="button"
           onClick={() => shift(-1)}
-          className="flex size-10 items-center justify-center border border-line text-ink transition-colors duration-300 hover:border-fill disabled:opacity-30"
+          className="flex size-9 items-center justify-center border border-line text-ink transition-colors duration-300 hover:border-fill disabled:opacity-30 sm:size-10"
           aria-label="ماه قبل"
           disabled={atCurrentMonth}
         >
           <svg
             viewBox="0 0 24 24"
-            className="size-4 rtl:rotate-180"
+            className="size-3.5 rtl:rotate-180 sm:size-4"
             fill="none"
             stroke="currentColor"
             strokeWidth="1.5"
@@ -79,15 +80,15 @@ export default function DatePicker({ value, onChange }: Props) {
           </svg>
         </button>
 
-        <div className="flex flex-col items-center gap-1">
-          <p className="font-display text-xl font-medium text-title" aria-live="polite">
+        <div className="flex flex-col items-center gap-0.5 sm:gap-1">
+          <p className="font-display text-lg font-medium text-title sm:text-xl" aria-live="polite">
             {monthLabel(cursor.y, cursor.m)}
           </p>
           {!atCurrentMonth && (
             <button
               type="button"
               onClick={jumpToToday}
-              className="text-eyebrow text-muted underline underline-offset-4 transition-colors hover:text-ink"
+              className="text-[0.6875rem] tracking-[0.2em] text-muted underline underline-offset-4 uppercase transition-colors hover:text-ink sm:text-eyebrow"
             >
               بازگشت به امروز
             </button>
@@ -97,13 +98,13 @@ export default function DatePicker({ value, onChange }: Props) {
         <button
           type="button"
           onClick={() => shift(1)}
-          className="flex size-10 items-center justify-center border border-line text-ink transition-colors duration-300 hover:border-fill disabled:opacity-30"
+          className="flex size-9 items-center justify-center border border-line text-ink transition-colors duration-300 hover:border-fill disabled:opacity-30 sm:size-10"
           aria-label="ماه بعد"
           disabled={atMaxMonth}
         >
           <svg
             viewBox="0 0 24 24"
-            className="size-4 rtl:rotate-180"
+            className="size-3.5 rtl:rotate-180 sm:size-4"
             fill="none"
             stroke="currentColor"
             strokeWidth="1.5"
@@ -114,12 +115,14 @@ export default function DatePicker({ value, onChange }: Props) {
         </button>
       </div>
 
-      <div className="mt-6" role="grid" aria-label="انتخاب تاریخ">
-        <div className="grid grid-cols-7 gap-1" role="row">
+      {/* Calendar grid */}
+      <div className="mt-4 sm:mt-6" role="grid" aria-label="انتخاب تاریخ">
+        {/* Weekday headers */}
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-1" role="row">
           {WEEKDAYS.map((w, i) => (
             <div
               key={w}
-              className="pb-2 text-center text-eyebrow text-muted"
+              className="pb-1.5 text-center text-[0.6875rem] tracking-[0.2em] text-muted uppercase sm:pb-2 sm:text-eyebrow"
               role="columnheader"
               aria-label={WEEKDAY_NAMES[i]}
             >
@@ -128,8 +131,9 @@ export default function DatePicker({ value, onChange }: Props) {
           ))}
         </div>
 
+        {/* Day cells */}
         {weeks.map((week, w) => (
-          <div key={w} className="grid grid-cols-7 gap-1" role="row">
+          <div key={w} className="grid grid-cols-7 gap-0.5 sm:gap-1" role="row">
             {week.map((iso, i) => {
               if (!iso) return <div key={`b${w}-${i}`} role="gridcell" aria-hidden="true" />
               const past = iso < today
@@ -143,7 +147,7 @@ export default function DatePicker({ value, onChange }: Props) {
                     disabled={past}
                     aria-label={reason ? `${longLabel(iso)} — ${reason}` : longLabel(iso)}
                     onClick={() => onChange(iso)}
-                    className={`flex aspect-square w-full items-center justify-center text-body transition-colors duration-300 ${
+                    className={`flex aspect-square w-full items-center justify-center text-[0.875rem] transition-colors duration-300 sm:text-body ${
                       past
                         ? 'cursor-not-allowed text-disabled'
                         : selected
@@ -160,9 +164,9 @@ export default function DatePicker({ value, onChange }: Props) {
                   {reason && !past && (
                     <div
                       role="tooltip"
-                      className="pointer-events-none absolute bottom-full start-1/2 z-20 mb-2 -translate-x-1/2 opacity-0 transition-all duration-200 group-hover:opacity-100 group-focus-within:opacity-100"
+                      className="pointer-events-none absolute bottom-full start-1/2 z-20 mb-1.5 -translate-x-1/2 opacity-0 transition-all duration-200 group-hover:opacity-100 group-focus-within:opacity-100 sm:mb-2"
                     >
-                      <div className="whitespace-nowrap border border-line bg-canvas px-2.5 py-1 text-[11px] leading-tight font-medium text-ink shadow-md">
+                      <div className="whitespace-nowrap border border-line bg-canvas px-2 py-1 text-[10px] leading-tight font-medium text-ink shadow-md sm:px-2.5 sm:text-[11px]">
                         {reason}
                       </div>
                     </div>
@@ -174,7 +178,8 @@ export default function DatePicker({ value, onChange }: Props) {
         ))}
       </div>
 
-      <p className="mt-5 flex items-center gap-2 text-eyebrow text-muted">
+      {/* Legend */}
+      <p className="mt-3.5 flex items-center gap-1.5 text-[0.6875rem] tracking-[0.2em] text-muted uppercase sm:mt-5 sm:gap-2 sm:text-eyebrow">
         <span className="inline-block size-2 shrink-0 rounded-full bg-closed" aria-hidden="true" />
         <span>تعطیل رسمی و جمعه‌ها</span>
       </p>
