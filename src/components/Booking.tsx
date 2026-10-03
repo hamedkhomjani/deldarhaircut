@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef } from 'react'
+import { useEffect, useReducer, useRef, useState } from 'react'
 import DatePicker from './DatePicker.tsx'
 import { longLabel, toFa } from '../lib/jalali.ts'
 import { normalizePhone, phoneValid } from '../lib/phone.ts'
@@ -65,6 +65,38 @@ function reducer(state: State, action: Action): State {
     case 'reset':
       return initial
   }
+}
+
+/**
+ * The whole flow lives in memory, so an accidental refresh — easy on a phone, and easy
+ * after switching apps — silently discards four steps of typing. Mirroring to
+ * sessionStorage makes a reload recoverable; an explicit deep link still wins over a
+ * saved draft, because clicking a service in the Services section is a deliberate act.
+ */
+const DRAFT_KEY = 'deldar:booking-draft'
+
+const loadDraft = (): Partial<State> | null => {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY)
+    return raw ? (JSON.parse(raw) as Partial<State>) : null
+  } catch {
+    return null
+  }
+}
+
+const saveDraft = (state: State) => {
+  try {
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify(state))
+  } catch {
+    // private mode or quota exceeded — the form still works, it just won't survive a reload
+  }
+}
+
+const seeded = (location: LocationKey | null, service: ServiceKey | null): State => {
+  let step = 0
+  if (location) step = 1
+  if (location && service) step = 2
+  return { ...initial, location, service, step }
 }
 
 const STEPS = ['محل سرویس', 'نوع خدمت', 'تاریخ و ساعت', 'اطلاعات تماس', 'تأیید']
@@ -180,18 +212,21 @@ export default function Booking({
     reducer,
     { initialLocation, initialService },
     (seed) => {
-      let step = 0
-      if (seed.initialLocation) step = 1
-      if (seed.initialLocation && seed.initialService) step = 2
+      const draft = loadDraft()
+      if (!seed.initialLocation && !seed.initialService) return draft ? { ...initial, ...draft } : initial
+      // a deep link restarts the run at the step it implies, but keeps any draft details
       return {
         ...initial,
-        location: seed.initialLocation,
-        service: seed.initialService,
-        step,
+        ...draft,
+        ...seeded(seed.initialLocation ?? draft?.location ?? null, seed.initialService ?? draft?.service ?? null),
+        done: false,
       }
     },
   )
   const panelRef = useRef<HTMLDivElement>(null)
+  const stepRef = useRef<HTMLDivElement>(null)
+  const prevStep = useRef<{ step: number; done: boolean } | null>(null)
+  const [copied, setCopied] = useState(false)
 
   const home = state.location === 'home'
 
@@ -202,11 +237,29 @@ export default function Booking({
     state.name.trim().length >= 2 && phoneValid(state.phone) && (!home || state.address.trim().length >= 5),
   ]
 
+  useEffect(() => {
+    saveDraft(state)
+  }, [state])
+
   // Anchor the top of the panel — the step title, the progress bars and the head of the
   // newly revealed step — just below the sticky navbar. The previous `block: 'center'` on
   // the panel *body* ignored both the navbar and the 118px panel header above that body,
   // so on short viewports the step indicator scrolled off the top of the screen.
   useEffect(() => {
+    const current = { step: state.step, done: state.done }
+    // Compare against the last committed step rather than skipping on first render, so the
+    // early return below survives StrictMode's double-invoke of mount effects.
+    const changed =
+      prevStep.current !== null &&
+      (prevStep.current.step !== current.step || prevStep.current.done !== current.done)
+    prevStep.current = current
+    if (!changed) return
+
+    // The "next" button just clicked lives inside the step now being unmounted, so focus
+    // falls back to <body> and keyboard users lose their place entirely. Move it into the
+    // new step first; preventScroll keeps our own scroll maths below authoritative.
+    stepRef.current?.focus({ preventScroll: true })
+
     if (state.step === 0 && !state.done) return
     const panel = panelRef.current
     if (!panel) return
@@ -247,12 +300,19 @@ export default function Booking({
     ...(home ? ([['نشانی', state.address]] as [string, string][]) : []),
   ]
 
-  const waText = encodeURIComponent(
-    [
-      'درخواست نوبت — حمیده دلدار',
-      ...summary.map(([k, v]) => `${k}: ${v}`),
-    ].join('\n'),
-  )
+  const summaryText = ['درخواست نوبت — حمیده دلدار', ...summary.map(([k, v]) => `${k}: ${v}`)].join('\n')
+  const waLink = `https://wa.me/${site.phone.replace(/\D/g, '')}?text=${encodeURIComponent(summaryText)}`
+
+  const copySummary = async () => {
+    try {
+      await navigator.clipboard.writeText(summaryText)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2500)
+    } catch {
+      // clipboard blocked (insecure context or permission denied) — the summary is on
+      // screen regardless, and the handoff buttons below still work
+    }
+  }
 
   return (
     <section id="booking" className="scroll-mt-16 sm:scroll-mt-20 lg:scroll-mt-24">
@@ -276,7 +336,7 @@ export default function Booking({
           <div className="border-b border-line p-4 sm:p-6 md:p-8">
             <div className="flex items-center justify-between gap-4 sm:gap-6">
               <p className="text-eyebrow text-muted">
-                {state.done ? 'درخواست ثبت شد' : `مرحله ${toFa(state.step + 1)} از ${toFa(STEPS.length)}`}
+                {state.done ? 'درخواست آماده ارسال' : `مرحله ${toFa(state.step + 1)} از ${toFa(STEPS.length)}`}
               </p>
               <p className="text-[0.9375rem] text-title sm:text-body">{STEPS[state.done ? STEPS.length - 1 : state.step]}</p>
             </div>
@@ -293,17 +353,18 @@ export default function Booking({
             </ol>
           </div>
 
-          {/* Step content */}
-          <div className="p-4 sm:p-6 md:p-8 lg:p-12">
+          {/* Step content. tabIndex + focus target lives here rather than on either branch,
+              so it survives the swap between a step and the summary. */}
+          <div ref={stepRef} tabIndex={-1} className="p-4 focus:outline-none sm:p-6 md:p-8 lg:p-12">
             {state.done ? (
               <div key="done" className="animate-rise motion-reduce:animate-none">
                 <p className="text-eyebrow text-muted">تأیید</p>
                 <h3 className="mt-4 font-display text-2xl leading-[1.6] font-medium text-title sm:mt-6 sm:text-3xl md:text-4xl">
-                  نوبت شما ثبت شد
+                  نوبت شما آماده است
                 </h3>
                 <p className="mt-4 max-w-lg text-[0.9375rem] leading-7 font-light text-ink sm:mt-5 sm:text-body sm:leading-8">
-                  ممنون {state.name.split(' ')[0]}. خلاصه‌ی نوبت شما به این شکل است. برای هماهنگی
-                  نهایی در همین روز با شما تماس می‌گیرم.
+                  ممنون {state.name.split(' ')[0]}. برای ثبت نهایی، خلاصه‌ی زیر را در واتساپ یا دایرکت
+                  اینستاگرام بفرستید. پس از دریافت، در همان روز با شما تماس می‌گیرم.
                 </p>
 
                 {/* Summary table */}
@@ -321,16 +382,36 @@ export default function Booking({
 
                 {/* Actions — stacked on mobile, wrap on sm+ */}
                 <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 md:mt-12">
+                  {/* site.phone ships empty, which used to render nothing here and left a
+                      completed booking with nowhere to go. Fall back to the one channel
+                      that is always configured. */}
                   {site.phone ? (
                     <a
-                      href={`https://wa.me/${site.phone.replace(/\D/g, '')}?text=${waText}`}
+                      href={waLink}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="pill h-12 px-6 sm:h-14 sm:px-8"
                     >
                       ارسال در واتساپ
                     </a>
-                  ) : null}
+                  ) : (
+                    <a
+                      href={site.instagram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="pill h-12 px-6 sm:h-14 sm:px-8"
+                    >
+                      ارسال در دایرکت اینستاگرام
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    onClick={copySummary}
+                    aria-live="polite"
+                    className="pill h-12 w-full border border-line bg-transparent px-6 hover:border-fill hover:bg-wash sm:h-14 sm:w-auto sm:px-8"
+                  >
+                    {copied ? 'کپی شد' : 'کپی خلاصه'}
+                  </button>
                   <button
                     type="button"
                     onClick={() => dispatch({ type: 'edit', step: 3 })}
