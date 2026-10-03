@@ -79,13 +79,15 @@ export default function Services() {
               {/* Service list */}
               <ul className="mt-6 space-y-0 border-t border-line sm:mt-8 md:mt-10">
                 {services.map((service) => (
-                  <li key={service.key} className="border-b border-line">
+                  <li key={service.key} className="group border-b border-line">
                     <Link
                       href={`/booking?loc=${card.loc}&service=${service.key}`}
-                      className="flex items-center justify-between py-3.5 text-body font-light text-ink transition-colors hover:text-title sm:py-4"
+                      className="-mx-3 flex items-center justify-between px-3 py-3.5 text-body font-light text-ink transition-colors hover:bg-wash hover:text-title sm:py-4"
                     >
                       <span>{service.title}</span>
-                      <span className="text-xs text-muted">رزرو ←</span>
+                      <span className="text-xs text-muted transition-transform duration-300 group-hover:-translate-x-1">
+                        رزرو ←
+                      </span>
                     </Link>
                   </li>
                 ))}

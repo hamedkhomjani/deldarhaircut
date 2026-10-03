@@ -74,7 +74,7 @@ export default function Navbar() {
         <ul className="hidden items-center gap-8 lg:flex xl:gap-10">
           {links.map((link) => (
             <li key={link.anchor ?? 'booking'}>
-              <Link href={hrefFor(link.anchor)} className="link-quiet text-body">
+              <Link href={hrefFor(link.anchor)} className="link-underline text-body">
                 {link.label}
               </Link>
             </li>
@@ -95,7 +95,7 @@ export default function Navbar() {
             onClick={() => setOpenedAt(open ? null : pathname)}
             aria-expanded={open}
             aria-label="منو"
-            className="flex h-9 w-9 flex-col items-center justify-center gap-1.5 rounded-full border border-line transition-colors hover:border-fill lg:hidden"
+            className="flex h-9 w-9 flex-col items-center justify-center gap-1.5 rounded-full border border-line transition-colors hover:border-fill hover:bg-wash lg:hidden"
           >
             <span
               className={`h-px w-4 bg-ink transition-transform duration-300 ${open ? 'translate-y-[3.5px] rotate-45' : ''}`}
@@ -134,7 +134,7 @@ export default function Navbar() {
               <Link
                 href={hrefFor(link.anchor)}
                 onClick={() => setOpenedAt(null)}
-                className="block py-3 text-lead text-ink transition-colors hover:text-muted active:text-title"
+                className="link-underline w-fit py-3 text-lead"
               >
                 {link.label}
               </Link>

@@ -35,7 +35,7 @@ export default function Hero() {
             <Link href="/booking" className="pill h-12 w-full px-6 text-body sm:h-14 sm:w-auto sm:px-8 sm:text-lead">
               رزرو نوبت آنلاین
             </Link>
-            <a href="#portfolio" className="link-quiet justify-center text-body sm:text-lead">
+            <a href="#portfolio" className="link-underline justify-center text-body sm:text-lead">
               مشاهده نمونه‌کارها
             </a>
           </div>
