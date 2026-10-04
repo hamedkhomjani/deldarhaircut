@@ -1,19 +1,29 @@
 import { useState } from 'react'
 import { site } from '../site.ts'
 
+type CategoryKey = 'all' | 'cut' | 'blowdry'
+
 type Look = {
   id: string
   title: string
   style: string
+  category: 'cut' | 'blowdry'
   before: string
   after: string
 }
+
+const CATEGORIES: { key: CategoryKey; label: string }[] = [
+  { key: 'all', label: 'همه نمونه‌کارها' },
+  { key: 'cut', label: 'کوتاهی تخصصی' },
+  { key: 'blowdry', label: 'براشینگ و حالت‌دهی' },
+]
 
 const looks: Look[] = [
   {
     id: '1',
     title: 'کوتاهی تخصصی مو',
     style: 'Precision Cut',
+    category: 'cut',
     before: '/portfolio/before-1.svg',
     after: '/portfolio/after-1.svg',
   },
@@ -21,6 +31,7 @@ const looks: Look[] = [
     id: '2',
     title: 'براشینگ و استایلینگ',
     style: 'Blow-dry & Styling',
+    category: 'blowdry',
     before: '/portfolio/before-2.svg',
     after: '/portfolio/after-2.svg',
   },
@@ -28,6 +39,7 @@ const looks: Look[] = [
     id: '3',
     title: 'پکیج اختصاصی کوتاهی + براشینگ',
     style: 'Cut & Styling Package',
+    category: 'cut',
     before: '/portfolio/before-3.svg',
     after: '/portfolio/after-3.svg',
   },
@@ -35,6 +47,7 @@ const looks: Look[] = [
     id: '4',
     title: 'مدل فر و حالت‌دهی',
     style: 'Curls & Texture',
+    category: 'blowdry',
     before: '/portfolio/before-4.svg',
     after: '/portfolio/after-4.svg',
   },
@@ -42,6 +55,7 @@ const looks: Look[] = [
     id: '5',
     title: 'مدل کوتاه پیکسی',
     style: 'Pixie Cut',
+    category: 'cut',
     before: '/portfolio/before-5.svg',
     after: '/portfolio/after-5.svg',
   },
@@ -49,6 +63,7 @@ const looks: Look[] = [
     id: '6',
     title: 'برش لایه‌ای',
     style: 'Layered Cut',
+    category: 'cut',
     before: '/portfolio/before-6.svg',
     after: '/portfolio/after-6.svg',
   },
@@ -117,6 +132,12 @@ function Tile({ look }: { look: Look }) {
 }
 
 export default function Portfolio() {
+  const [activeCategory, setActiveCategory] = useState<CategoryKey>('all')
+
+  const filtered = activeCategory === 'all'
+    ? looks
+    : looks.filter((l) => l.category === activeCategory)
+
   return (
     <section id="portfolio" className="scroll-mt-16 sm:scroll-mt-20 lg:scroll-mt-24">
       <div className="container-lux pt-16 pb-16 sm:pt-20 sm:pb-20 lg:pt-32 lg:pb-40">
@@ -134,9 +155,30 @@ export default function Portfolio() {
           </p>
         </div>
 
+        {/* Category Filters */}
+        <div className="mt-8 flex flex-wrap items-center gap-2 sm:mt-10 sm:gap-3">
+          {CATEGORIES.map((cat) => {
+            const isActive = activeCategory === cat.key
+            return (
+              <button
+                key={cat.key}
+                type="button"
+                onClick={() => setActiveCategory(cat.key)}
+                className={`rounded-full px-4 py-2 text-[0.875rem] font-light transition-all sm:px-5 sm:py-2.5 sm:text-body ${
+                  isActive
+                    ? 'bg-fill text-canvas shadow-sm font-normal'
+                    : 'border border-line bg-canvas text-ink hover:border-fill hover:bg-wash'
+                }`}
+              >
+                {cat.label}
+              </button>
+            )
+          })}
+        </div>
+
         {/* Grid — 1 column on mobile, 2 on sm, 3 on lg */}
-        <div className="mt-10 grid gap-4 sm:mt-12 sm:grid-cols-2 sm:gap-6 lg:mt-24 lg:grid-cols-3">
-          {looks.map((look) => (
+        <div className="mt-8 grid gap-4 sm:mt-10 sm:grid-cols-2 sm:gap-6 lg:mt-12 lg:grid-cols-3">
+          {filtered.map((look) => (
             <Tile key={look.id} look={look} />
           ))}
         </div>

@@ -63,6 +63,11 @@ function reducer(state: State, action: Action): State {
     case 'edit':
       return { ...state, step: action.step, done: false }
     case 'reset':
+      try {
+        sessionStorage.removeItem(DRAFT_KEY)
+      } catch {
+        // ignore quota / private browsing errors
+      }
       return initial
   }
 }
@@ -260,7 +265,6 @@ export default function Booking({
     // new step first; preventScroll keeps our own scroll maths below authoritative.
     stepRef.current?.focus({ preventScroll: true })
 
-    if (state.step === 0 && !state.done) return
     const panel = panelRef.current
     if (!panel) return
     const nav = document.querySelector('header')
@@ -335,9 +339,20 @@ export default function Booking({
           {/* Progress header */}
           <div className="border-b border-line p-4 sm:p-6 md:p-8">
             <div className="flex items-center justify-between gap-4 sm:gap-6">
-              <p className="text-eyebrow text-muted">
-                {state.done ? 'درخواست آماده ارسال' : `مرحله ${toFa(state.step + 1)} از ${toFa(STEPS.length)}`}
-              </p>
+              <div className="flex items-center gap-3">
+                <p className="text-eyebrow text-muted">
+                  {state.done ? 'درخواست آماده ارسال' : `مرحله ${toFa(state.step + 1)} از ${toFa(STEPS.length)}`}
+                </p>
+                {(state.location !== null || state.service !== null) && !state.done && (
+                  <button
+                    type="button"
+                    onClick={() => dispatch({ type: 'reset' })}
+                    className="text-xs text-muted hover:text-closed transition-colors underline decoration-dotted underline-offset-4"
+                  >
+                    (شروع از ابتدا)
+                  </button>
+                )}
+              </div>
               <p className="text-[0.9375rem] text-title sm:text-body">{STEPS[state.done ? STEPS.length - 1 : state.step]}</p>
             </div>
             <ol className="mt-3.5 flex items-center gap-1.5 sm:mt-5 sm:gap-2">
