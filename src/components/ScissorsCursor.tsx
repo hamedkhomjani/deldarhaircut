@@ -39,14 +39,14 @@ function Scissors({ state }: { state: CursorState }) {
           {/* TOP BLADE — open: angles steeply toward upper-left */}
           <path
             d="M9 3 C 13 8, 16.5 12, 19.5 15.5"
-            stroke="#555047"
+            stroke="var(--color-ink)"
             strokeWidth="2.2"
             strokeLinecap="round"
           />
           {/* BOTTOM BLADE — open: angles toward the left */}
           <path
             d="M3 11 C 9 12, 14 13.8, 19.5 17"
-            stroke="#555047"
+            stroke="var(--color-ink)"
             strokeWidth="2.2"
             strokeLinecap="round"
           />
@@ -56,7 +56,7 @@ function Scissors({ state }: { state: CursorState }) {
             cy="10"
             rx="3.8"
             ry="2.5"
-            stroke="#555047"
+            stroke="var(--color-ink)"
             strokeWidth="1.6"
             transform="rotate(-52 25.5 10)"
           />
@@ -66,7 +66,7 @@ function Scissors({ state }: { state: CursorState }) {
             cy="23"
             rx="3.8"
             ry="2.5"
-            stroke="#555047"
+            stroke="var(--color-ink)"
             strokeWidth="1.6"
             transform="rotate(52 25.5 23)"
           />
@@ -76,14 +76,14 @@ function Scissors({ state }: { state: CursorState }) {
           {/* TOP BLADE — closed: tips nearly meeting at upper-left */}
           <path
             d="M7 5 C 11 9, 15.5 12.5, 19.5 15.5"
-            stroke="#555047"
+            stroke="var(--color-ink)"
             strokeWidth="2.2"
             strokeLinecap="round"
           />
           {/* BOTTOM BLADE — closed: parallel to top blade */}
           <path
             d="M5 8 C 9 10.5, 14 13.5, 19.5 17"
-            stroke="#555047"
+            stroke="var(--color-ink)"
             strokeWidth="2.2"
             strokeLinecap="round"
           />
@@ -93,7 +93,7 @@ function Scissors({ state }: { state: CursorState }) {
             cy="12"
             rx="3.8"
             ry="2.5"
-            stroke="#555047"
+            stroke="var(--color-ink)"
             strokeWidth="1.6"
             transform="rotate(-35 25 12)"
           />
@@ -103,7 +103,7 @@ function Scissors({ state }: { state: CursorState }) {
             cy="21"
             rx="3.8"
             ry="2.5"
-            stroke="#555047"
+            stroke="var(--color-ink)"
             strokeWidth="1.6"
             transform="rotate(35 25 21)"
           />
@@ -111,8 +111,8 @@ function Scissors({ state }: { state: CursorState }) {
       )}
 
       {/* PIVOT RIVET — always at the crossing point */}
-      <circle cx="19.5" cy="16.3" r="2.1" fill="#f7f5f2" stroke="#555047" strokeWidth="1.4" />
-      <circle cx="19.5" cy="16.3" r="0.65" fill="#948a7a" />
+      <circle cx="19.5" cy="16.3" r="2.1" fill="var(--color-wash)" stroke="var(--color-ink)" strokeWidth="1.4" />
+      <circle cx="19.5" cy="16.3" r="0.65" fill="var(--color-fill)" />
     </svg>
   )
 }
@@ -134,9 +134,9 @@ export default function ScissorsCursor() {
   const stateRef = useRef<CursorState>('closed')
   const snipTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Keep ref in sync so event-handler closures always see the latest state
-  // without needing it as an effect dependency.
-  stateRef.current = state
+  useEffect(() => {
+    stateRef.current = state
+  }, [state])
 
   useEffect(() => {
     // Skip entirely on touchscreen-only devices — cursors are invisible there

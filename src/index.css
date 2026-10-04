@@ -1,46 +1,96 @@
 @import 'tailwindcss';
 
+:root {
+  --canvas: #ffffff;
+  --title: #756f64; /* display / headings — 4.98:1 canvas, 4.58:1 wash */
+  --ink: #555047; /* body & general text — 8.00:1 canvas, 7.35:1 wash */
+  --muted: #645e55; /* meta, eyebrows — 6.41:1 canvas, 5.89:1 wash */
+  --fill: #948a7a; /* buttons, control borders — 3.40:1, clears 1.4.11 */
+  --on-fill: #000000; /* 6.18:1 on fill */
+  --line: #d0ccc4; /* decorative hairlines — 1.60:1, no minimum */
+  --disabled: #9a948b; /* unavailable dates — 3.01:1, readable */
+  --closed: #9e342c; /* weekend + fixed holidays — 7.04:1 canvas, 6.47:1 wash */
+  --wash: #f7f5f2; /* subtle panel */
+
+  /* Dark panel — footer */
+  --dusk: #1c1a18;
+  --dusk-ink: #f2efe9;
+  --dusk-muted: #afaaa2;
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --canvas: #121110;
+  --title: #e4dfd5;
+  --ink: #cfc9be;
+  --muted: #9e978c;
+  --fill: #a59885;
+  --on-fill: #121110;
+  --line: #2b2824;
+  --disabled: #5a544a;
+  --closed: #e25b4e;
+  --wash: #1a1815;
+
+  --dusk: #090908;
+  --dusk-ink: #f2efe9;
+  --dusk-muted: #afaaa2;
+
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --canvas: #121110;
+    --title: #e4dfd5;
+    --ink: #cfc9be;
+    --muted: #9e978c;
+    --fill: #a59885;
+    --on-fill: #121110;
+    --line: #2b2824;
+    --disabled: #5a544a;
+    --closed: #e25b4e;
+    --wash: #1a1815;
+
+    --dusk: #090908;
+    --dusk-ink: #f2efe9;
+    --dusk-muted: #afaaa2;
+
+    color-scheme: dark;
+  }
+}
+
 @theme {
-  /* Palette — warm greige on white, per reference. Hue 37deg held constant
-     across the ramp; only lightness moves. Names are role-based and
-     deliberately do NOT collide with the --text-* font-size tokens below
-     (display, h2, lead, body, eyebrow).
-     All text tokens clear WCAG AA 4.5:1 on BOTH canvas and wash, so they are
-     safe at any size. Measured ratios are in the comment beside each. */
-  --color-canvas: #ffffff;
-  --color-title: #756f64; /* display / headings — 4.98:1 canvas, 4.58:1 wash */
-  --color-ink: #555047; /* body & general text — 8.00:1 canvas, 7.35:1 wash */
-  --color-muted: #645e55; /* meta, eyebrows — 6.41:1 canvas, 5.89:1 wash */
-  --color-fill: #948a7a; /* buttons, control borders — 3.40:1, clears 1.4.11 */
-  --color-on-fill: #000000; /* 6.18:1 on fill */
-  --color-line: #d0ccc4; /* decorative hairlines — 1.60:1, no minimum */
-  --color-disabled: #9a948b; /* unavailable dates — 3.01:1, readable */
-  --color-closed: #9e342c; /* weekend + fixed holidays — 7.04:1 canvas, 6.47:1 wash */
-  --color-wash: #f7f5f2; /* subtle panel */
+  --color-canvas: var(--canvas);
+  --color-title: var(--title);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-fill: var(--fill);
+  --color-on-fill: var(--on-fill);
+  --color-line: var(--line);
+  --color-disabled: var(--disabled);
+  --color-closed: var(--closed);
+  --color-wash: var(--wash);
 
-  /* Dark panel — footer. 15.1:1 and 7.5:1 against --color-dusk */
-  --color-dusk: #1c1a18;
-  --color-dusk-ink: #f2efe9;
-  --color-dusk-muted: #afaaa2;
+  --color-dusk: var(--dusk);
+  --color-dusk-ink: var(--dusk-ink);
+  --color-dusk-muted: var(--dusk-muted);
 
-  /* Typography — mobile-first scale. Base sizes are for ≤639px screens;
-     larger screens scale up via responsive Tailwind utilities in components.
-     This ensures every text element is comfortably readable on small phones
-     first, then progressively enhanced for tablets and desktops. */
+  /* Typography — mobile-first scale. */
   --font-sans:
     'Vazirmatn', ui-sans-serif, system-ui, 'Segoe UI', Tahoma, sans-serif;
   --font-display: 'Noto Naskh Arabic', 'Times New Roman', Georgia, serif;
   --font-latin: 'Cormorant Garamond', 'Times New Roman', Georgia, serif;
 
-  --text-display: 5rem; /* 80px, ref h1 */
+  --text-display: 5rem;
   --text-display--line-height: 1.3;
-  --text-h2: 2.5rem; /* 40px, ref h2 */
+  --text-h2: 2.5rem;
   --text-h2--line-height: 1.55;
-  --text-lead: 1.375rem; /* 22px, ref body-large */
+  --text-lead: 1.375rem;
   --text-lead--line-height: 1.75;
-  --text-body: 1.0625rem; /* 17px, ref body-medium */
+  --text-body: 1.0625rem;
   --text-body--line-height: 1.75;
-  --text-eyebrow: 0.75rem; /* 12px, ref eyebrow */
+  --text-eyebrow: 0.75rem;
   --text-eyebrow--line-height: 1.75;
   --text-eyebrow--letter-spacing: 0.3em;
 
@@ -115,6 +165,11 @@
 /* Reference-style pill: greige fill, black label, fully rounded, never wraps */
 @utility pill {
   @apply inline-flex items-center justify-center rounded-full bg-fill text-on-fill whitespace-nowrap transition-opacity duration-300 hover:opacity-85 active:opacity-70;
+}
+
+/* Reference-style outlined pill button: transparent fill, ink label, border-line */
+@utility pill-outline {
+  @apply inline-flex items-center justify-center rounded-full border border-line bg-transparent text-ink whitespace-nowrap transition-colors duration-300 hover:border-fill hover:bg-wash active:opacity-70;
 }
 
 /* Reference-style text link: no fill, greige label */

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from '../lib/router.tsx'
 import { useRouter } from '../lib/router-context.ts'
+import ThemeToggle from './ThemeToggle.tsx'
 
 const links = [
   { label: 'خدمات', anchor: 'services' },
@@ -81,8 +82,9 @@ export default function Navbar() {
           ))}
         </ul>
 
-        {/* CTA + Hamburger */}
+        {/* CTA + ThemeToggle + Hamburger */}
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <ThemeToggle />
           <Link
             href="/booking"
             aria-current={onBooking ? 'page' : undefined}
@@ -107,10 +109,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile overlay backdrop. A real <button>, not a div: the div carried onClick
-          while aria-hidden, so it was an interactive control AT could neither find nor
-          activate. `inert` mirrors the panel below and keeps it out of the tab order
-          while closed. */}
+      {/* Mobile overlay backdrop */}
       <button
         type="button"
         inert={!open}
@@ -121,26 +120,28 @@ export default function Navbar() {
         }`}
       />
 
-      {/* Mobile slide-down menu — absolutely positioned to avoid reflowing the page */}
+      {/* Mobile slide-down menu */}
       <div
         inert={!open}
         className={`absolute inset-x-0 top-full z-50 overflow-hidden border-b border-line bg-canvas/95 shadow-lg shadow-ink/5 backdrop-blur-md transition-[max-height,opacity] duration-500 lg:hidden ${
-          open ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'
+          open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
-        <ul className="container-lux flex flex-col gap-1 py-5 sm:py-6">
-          {links.map((link) => (
-            <li key={link.anchor ?? 'booking'}>
-              <Link
-                href={hrefFor(link.anchor)}
-                onClick={() => setOpenedAt(null)}
-                className="link-underline w-fit py-3 text-lead"
-              >
-                {link.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="container-lux flex flex-col gap-4 py-5 sm:py-6">
+          <ul className="flex flex-col gap-1">
+            {links.map((link) => (
+              <li key={link.anchor ?? 'booking'}>
+                <Link
+                  href={hrefFor(link.anchor)}
+                  onClick={() => setOpenedAt(null)}
+                  className="link-underline w-fit py-3 text-lead"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </header>
   )

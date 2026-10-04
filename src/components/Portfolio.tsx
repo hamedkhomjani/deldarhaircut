@@ -166,7 +166,7 @@ export default function Portfolio() {
                 onClick={() => setActiveCategory(cat.key)}
                 className={`rounded-full px-4 py-2 text-[0.875rem] font-light transition-all sm:px-5 sm:py-2.5 sm:text-body ${
                   isActive
-                    ? 'bg-fill text-canvas shadow-sm font-normal'
+                    ? 'bg-fill text-on-fill shadow-sm font-medium'
                     : 'border border-line bg-canvas text-ink hover:border-fill hover:bg-wash'
                 }`}
               >

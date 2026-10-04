@@ -423,7 +423,7 @@ export default function Booking({
                     type="button"
                     onClick={copySummary}
                     aria-live="polite"
-                    className="pill h-12 w-full border border-line bg-transparent px-6 hover:border-fill hover:bg-wash sm:h-14 sm:w-auto sm:px-8"
+                    className="pill-outline h-12 w-full px-6 sm:h-14 sm:w-auto sm:px-8"
                   >
                     {copied ? 'کپی شد' : 'کپی خلاصه'}
                   </button>
@@ -660,7 +660,7 @@ export default function Booking({
                     <button
                       type="button"
                       onClick={() => dispatch({ type: 'back' })}
-                      className="pill h-12 w-full border border-line bg-transparent px-6 hover:border-fill hover:bg-wash sm:h-14 sm:w-auto sm:px-8"
+                      className="pill-outline h-12 w-full px-6 sm:h-14 sm:w-auto sm:px-8"
                     >
                       مرحله قبل
                     </button>
