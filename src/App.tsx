@@ -3,6 +3,7 @@ import Footer from './components/Footer.tsx'
 import Hero from './components/Hero.tsx'
 import Navbar from './components/Navbar.tsx'
 import Portfolio from './components/Portfolio.tsx'
+import ScissorsCursor from './components/ScissorsCursor.tsx'
 import Services from './components/Services.tsx'
 import { ScrollManager } from './lib/router.tsx'
 import { useRouter } from './lib/router-context.ts'
@@ -36,6 +37,7 @@ export default function App() {
       {/* must sit outside the route branch: mounted per-branch it would unmount on every
           navigation, leaving the new page at the previous scroll offset (footer in view) */}
       <ScrollManager />
+      <ScissorsCursor />
       {isBooking ? (
         <Suspense fallback={<RouteFallback />}>
           <BookingPage />
