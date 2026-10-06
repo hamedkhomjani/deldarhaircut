@@ -117,7 +117,7 @@ function Scissors({ state }: { state: CursorState }) {
   )
 }
 
-/** Interactive-element detector used by both mousemove and mousedown handlers. */
+/** Interactive-element detector used by both pointermove and pointerdown handlers. */
 const isInteractive = (el: EventTarget | null): boolean =>
   el instanceof Element
     ? Boolean(
@@ -139,63 +139,118 @@ export default function ScissorsCursor() {
   }, [state])
 
   useEffect(() => {
-    // Skip entirely on touchscreen-only devices — cursors are invisible there
-    // and hiding the OS cursor would break accessibility.
-    if (!window.matchMedia('(any-pointer: fine)').matches) return
+    // Disable scissors cursor on mobile / tablet / touch views or screen widths < 1024px
+    const fine = window.matchMedia('(pointer: fine)')
+    const hover = window.matchMedia('(hover: hover)')
+    const coarse = window.matchMedia('(pointer: coarse)')
+    const mobile = window.matchMedia('(max-width: 1023px)')
 
-    // Inject a single style rule that hides the native cursor everywhere.
-    // Using !important beats Tailwind utilities (cursor-pointer, cursor-not-allowed, etc.)
-    // that would otherwise let the OS cursor peek through.
-    const style = document.createElement('style')
-    style.id = 'scissors-cursor-hide'
-    style.textContent = '*, *::before, *::after { cursor: none !important; }'
-    document.head.appendChild(style)
+    let style: HTMLStyleElement | null = null
+    let detach: (() => void) | null = null
 
-    // ── Position update: bypasses React reconciler for smooth 60fps tracking ──
-    const onMove = (e: MouseEvent) => {
-      if (cursorEl.current) {
-        // Subtract the hotspot offset (≈ blade tip at [6, 4] in the 32×32 SVG)
-        cursorEl.current.style.transform = `translate(${e.clientX - 6}px, ${e.clientY - 4}px)`
+    const enable = () => {
+      if (style) return
+
+      // Inject a single style rule that hides the native cursor everywhere on desktop.
+      // Using !important beats Tailwind utilities (cursor-pointer, cursor-not-allowed, etc.)
+      const el = document.createElement('style')
+      el.id = 'scissors-cursor-hide'
+      el.textContent =
+        '@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { *, *::before, *::after { cursor: none !important; } }'
+      document.head.appendChild(el)
+      style = el
+
+      // ── Position update: bypasses React reconciler for smooth 60fps tracking ──
+      const onMove = (e: PointerEvent) => {
+        if (e.pointerType !== 'mouse') return
+        if (cursorEl.current) {
+          // Subtract the hotspot offset (≈ blade tip at [6, 4] in the 32×32 SVG)
+          cursorEl.current.style.transform = `translate(${e.clientX - 6}px, ${e.clientY - 4}px)`
+        }
+
+        // Fade in on the very first movement (avoids a flash at [0,0] on mount)
+        setVisible(true)
+
+        // Only update open/closed when we're not mid-snip
+        if (stateRef.current !== 'snip') {
+          const next: CursorState = isInteractive(e.target) ? 'open' : 'closed'
+          if (next !== stateRef.current) setState(next)
+        }
       }
 
-      // Fade in on the very first movement (avoids a flash at [0,0] on mount)
-      setVisible(true)
+      // ── Snip: fires on pointerdown (before any navigation) ──
+      const onDown = (e: PointerEvent) => {
+        if (e.pointerType !== 'mouse') return
+        if (snipTimer.current) {
+          clearTimeout(snipTimer.current)
+          snipTimer.current = null
+        }
+        setState('snip')
+        snipTimer.current = setTimeout(() => {
+          // After 150ms, settle back to whichever state the pointer is now over
+          const under = document.elementFromPoint(e.clientX, e.clientY)
+          setState(isInteractive(under) ? 'open' : 'closed')
+          snipTimer.current = null
+        }, 150)
+      }
 
-      // Only update open/closed when we're not mid-snip
-      if (stateRef.current !== 'snip') {
-        const next: CursorState = isInteractive(e.target) ? 'open' : 'closed'
-        if (next !== stateRef.current) setState(next)
+      const onLeave = (e: PointerEvent) => {
+        if (e.pointerType === 'mouse') setVisible(false)
+      }
+
+      document.addEventListener('pointermove', onMove, { passive: true })
+      // capture:true so the snip fires before any React onClick handler
+      document.addEventListener('pointerdown', onDown, { capture: true, passive: true })
+      document.documentElement.addEventListener('pointerleave', onLeave)
+
+      detach = () => {
+        document.removeEventListener('pointermove', onMove)
+        document.removeEventListener('pointerdown', onDown, { capture: true })
+        document.documentElement.removeEventListener('pointerleave', onLeave)
       }
     }
 
-    // ── Snip: fires on mousedown (before any navigation) ──
-    const onDown = (e: MouseEvent) => {
+    const disable = () => {
+      if (!style) return
+      detach?.()
+      detach = null
+      style.remove()
+      style = null
+
+      // Abandon a pending snip and park the overlay off-screen
       if (snipTimer.current) {
         clearTimeout(snipTimer.current)
         snipTimer.current = null
       }
-      setState('snip')
-      snipTimer.current = setTimeout(() => {
-        // After 150ms, settle back to whichever state the pointer is now over
-        const under = document.elementFromPoint(e.clientX, e.clientY)
-        setState(isInteractive(under) ? 'open' : 'closed')
-        snipTimer.current = null
-      }, 150)
+      stateRef.current = 'closed'
+      setState('closed')
+      setVisible(false)
+      if (cursorEl.current) cursorEl.current.style.transform = 'translate(-200px, -200px)'
     }
 
-    const onLeave = () => setVisible(false)
+    const sync = () => {
+      const isMobileView = mobile.matches || coarse.matches || !hover.matches || !fine.matches
+      if (isMobileView) {
+        disable()
+      } else {
+        enable()
+      }
+    }
 
-    document.addEventListener('mousemove', onMove, { passive: true })
-    // capture:true so the snip fires before any React onClick handler
-    document.addEventListener('mousedown', onDown, { capture: true, passive: true })
-    document.documentElement.addEventListener('mouseleave', onLeave)
+    sync()
+    fine.addEventListener('change', sync)
+    hover.addEventListener('change', sync)
+    coarse.addEventListener('change', sync)
+    mobile.addEventListener('change', sync)
+    window.addEventListener('resize', sync)
 
     return () => {
-      document.removeEventListener('mousemove', onMove)
-      document.removeEventListener('mousedown', onDown, { capture: true })
-      document.documentElement.removeEventListener('mouseleave', onLeave)
-      if (snipTimer.current) clearTimeout(snipTimer.current)
-      style.remove()
+      fine.removeEventListener('change', sync)
+      hover.removeEventListener('change', sync)
+      coarse.removeEventListener('change', sync)
+      mobile.removeEventListener('change', sync)
+      window.removeEventListener('resize', sync)
+      disable()
     }
   }, []) // empty dep array: all mutable values are accessed through refs
 
@@ -205,6 +260,7 @@ export default function ScissorsCursor() {
     <div
       ref={cursorEl}
       aria-hidden="true"
+      className="hidden lg:block"
       style={{
         position: 'fixed',
         top: 0,
