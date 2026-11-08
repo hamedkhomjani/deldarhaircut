@@ -16,6 +16,16 @@
         } catch (e) {}
       })();
     </script>
+    <script>
+      (function() {
+        try {
+          if (localStorage.getItem('lang') === 'en') {
+            document.documentElement.lang = 'en';
+            document.documentElement.dir = 'ltr';
+          }
+        } catch (e) {}
+      })();
+    </script>
     <meta
       name="description"
       content="حمیده دلدار — متخصص کوتاهی و براشینگ مو. ارائه خدمات در استودیو و در محل شما (هوم‌سرویس)."

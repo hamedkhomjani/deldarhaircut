@@ -99,6 +99,12 @@
   --animate-fade: fade 1.4s var(--ease-soft) both;
 }
 
+/* English typography: Cormorant carries the editorial display voice for Latin text. */
+html[lang='en'] {
+  --font-display: 'Cormorant Garamond', 'Times New Roman', Georgia, serif;
+  --text-eyebrow--letter-spacing: 0.18em;
+}
+
 @keyframes rise {
   from {
     opacity: 0;
@@ -177,9 +183,9 @@
   @apply inline-flex items-center text-ink transition-colors duration-300 hover:text-muted;
 }
 
-/* Hairline underline that draws in from the inline start (RTL: right) */
+/* Hairline underline that draws in from the inline start (LTR: left, RTL: right) */
 @utility link-underline {
-  @apply relative inline-flex items-center gap-2 text-ink after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-right after:scale-x-0 after:bg-current after:transition-transform after:duration-500 hover:text-muted hover:after:scale-x-100;
+  @apply relative inline-flex items-center gap-2 text-ink after:absolute after:inset-x-0 after:-bottom-1 after:h-px ltr:after:origin-left rtl:after:origin-right after:scale-x-0 after:bg-current after:transition-transform after:duration-500 hover:text-muted hover:after:scale-x-100;
 }
 
 /* Booking form text input — border is a control boundary, so it uses

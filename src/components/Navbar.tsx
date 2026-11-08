@@ -1,21 +1,28 @@
 import { useEffect, useState } from 'react'
+import { useLocale } from '../lib/locale-context.ts'
 import { Link } from '../lib/router.tsx'
 import { useRouter } from '../lib/router-context.ts'
+import { site } from '../site.ts'
+import LanguageToggle from './LanguageToggle.tsx'
 import ThemeToggle from './ThemeToggle.tsx'
-
-const links = [
-  { label: 'خدمات', anchor: 'services' },
-  { label: 'نمونه‌کارها', anchor: 'portfolio' },
-  { label: 'رزرو نوبت', anchor: null },
-]
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   // storing the route the menu was opened on means a navigation closes it for free
   const [openedAt, setOpenedAt] = useState<string | null>(null)
   const { pathname } = useRouter()
+  const { locale, t } = useLocale()
   const open = openedAt === pathname
   const onBooking = pathname === '/booking' || pathname.startsWith('/booking/')
+
+  const links = [
+    { key: 'services', label: t.nav.services, anchor: 'services' },
+    { key: 'portfolio', label: t.nav.portfolio, anchor: 'portfolio' },
+    { key: 'booking', label: t.nav.booking, anchor: null },
+  ]
+
+  const brandName = locale === 'fa' ? site.name : site.latinName
+  const brandAlt = locale === 'fa' ? site.latinName : site.name
 
   // section anchors only exist on the landing page
   const hrefFor = (anchor: string | null) =>
@@ -58,23 +65,28 @@ export default function Navbar() {
       }`}
     >
       <nav
-        aria-label="ناوبری اصلی"
+        aria-label={t.nav.main}
         className="container-lux flex h-16 items-center justify-between gap-3 sm:h-20 lg:h-24"
       >
         {/* Brand — always visible */}
         <Link href={onBooking ? '/' : '/#top'} className="group flex shrink-0 items-baseline gap-2 sm:gap-3">
           <span className="font-display text-lg leading-none font-medium whitespace-nowrap text-ink transition-colors group-hover:text-muted sm:text-xl md:text-2xl">
-            حمیده دلدار
+            {brandName}
           </span>
-          <span className="hidden font-latin text-[0.7rem] tracking-[0.3em] text-muted uppercase lg:inline">
-            Hamideh Deldar
+          <span
+            className={`hidden text-[0.7rem] tracking-[0.3em] text-muted uppercase lg:inline ${
+              locale === 'fa' ? 'font-latin' : 'font-sans normal-case'
+            }`}
+            lang={locale === 'fa' ? 'en' : 'fa'}
+          >
+            {brandAlt}
           </span>
         </Link>
 
         {/* Desktop nav links — hidden on mobile/tablet */}
         <ul className="hidden items-center gap-8 lg:flex xl:gap-10">
           {links.map((link) => (
-            <li key={link.anchor ?? 'booking'}>
+            <li key={link.key}>
               <Link href={hrefFor(link.anchor)} className="link-underline text-body">
                 {link.label}
               </Link>
@@ -82,21 +94,22 @@ export default function Navbar() {
           ))}
         </ul>
 
-        {/* CTA + ThemeToggle + Hamburger */}
+        {/* CTA + Language + Theme + Hamburger */}
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <LanguageToggle />
           <ThemeToggle />
           <Link
             href="/booking"
             aria-current={onBooking ? 'page' : undefined}
-            className="pill h-9 px-4 text-[0.875rem] sm:px-6 sm:text-body"
+            className="pill hidden h-9 px-4 text-[0.875rem] sm:inline-flex sm:px-6 sm:text-body"
           >
-            رزرو آنلاین
+            {t.nav.bookOnline}
           </Link>
           <button
             type="button"
             onClick={() => setOpenedAt(open ? null : pathname)}
             aria-expanded={open}
-            aria-label="منو"
+            aria-label={t.nav.menu}
             className="flex h-9 w-9 flex-col items-center justify-center gap-1.5 rounded-full border border-line transition-colors hover:border-fill hover:bg-wash lg:hidden"
           >
             <span
@@ -113,7 +126,7 @@ export default function Navbar() {
       <button
         type="button"
         inert={!open}
-        aria-label="بستن منو"
+        aria-label={t.nav.closeMenu}
         onClick={() => setOpenedAt(null)}
         className={`fixed inset-0 top-16 z-40 cursor-default bg-ink/20 backdrop-blur-sm transition-opacity duration-300 sm:top-20 lg:hidden ${
           open ? 'opacity-100' : 'pointer-events-none opacity-0'
@@ -130,7 +143,7 @@ export default function Navbar() {
         <div className="container-lux flex flex-col gap-4 py-5 sm:py-6">
           <ul className="flex flex-col gap-1">
             {links.map((link) => (
-              <li key={link.anchor ?? 'booking'}>
+              <li key={link.key}>
                 <Link
                   href={hrefFor(link.anchor)}
                   onClick={() => setOpenedAt(null)}

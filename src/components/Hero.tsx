@@ -1,8 +1,9 @@
+import { useLocale } from '../lib/locale-context.ts'
 import { Link } from '../lib/router.tsx'
 
-const featureBadge = 'ارائه خدمات در استودیو و در محل شما (هوم‌سرویس)'
-
 export default function Hero() {
+  const { t } = useLocale()
+
   return (
     <section id="top" className="relative">
       {/* Mobile-first: single column, stacked. Image first on mobile for visual impact,
@@ -10,33 +11,32 @@ export default function Hero() {
       <div className="container-lux grid items-center gap-8 pt-6 pb-16 sm:gap-12 sm:pt-8 sm:pb-20 md:gap-16 lg:grid-cols-[1.1fr_0.9fr] lg:gap-24 lg:pt-16 lg:pb-40">
         {/* Text block — order-2 on mobile (after image), order-1 on lg+ */}
         <div className="animate-rise motion-reduce:animate-none order-2 lg:order-1">
-          <p className="text-eyebrow text-muted">استودیو و هوم‌سرویس</p>
+          <p className="text-eyebrow text-muted">{t.hero.eyebrow}</p>
 
           <h1 className="mt-5 font-display text-[clamp(2.25rem,8.5vw,5rem)] leading-[1.4] font-medium text-title sm:mt-6 sm:leading-[1.5] md:mt-8">
-            حمیده دلدار
+            {t.hero.name}
           </h1>
 
           <p className="mt-4 text-[1.125rem] font-light text-ink sm:mt-5 sm:text-lead md:mt-6">
-            متخصص کوتاهی و براشینگ مو
+            {t.hero.title}
           </p>
 
           {/* Badge — wraps naturally on mobile, inline on wider screens */}
           <p className="mt-6 inline-flex flex-wrap items-center rounded-full border border-line px-4 py-2 text-[0.9375rem] font-light text-muted sm:mt-8 sm:px-5 sm:text-body md:mt-10">
-            {featureBadge}
+            {t.hero.badge}
           </p>
 
           <p className="mt-6 max-w-xl text-[1.125rem] leading-8 font-light text-ink sm:mt-8 sm:text-lead md:mt-10">
-            برش و براشینگ مو با دقت و آرامش، در فضای استودیو یا در خانه‌ی
-            شما. هر مدل متناسب با فرم صورت و جنس موی شما طراحی می‌شود.
+            {t.hero.body}
           </p>
 
           {/* CTAs — full-width stacked on mobile, side-by-side on sm+ */}
           <div className="mt-8 flex flex-col items-stretch gap-4 sm:mt-10 sm:flex-row sm:items-center sm:gap-8 md:mt-14 md:gap-10">
             <Link href="/booking" className="pill h-12 w-full px-6 text-body sm:h-14 sm:w-auto sm:px-8 sm:text-lead">
-              رزرو نوبت آنلاین
+              {t.hero.bookCta}
             </Link>
             <a href="#portfolio" className="link-underline justify-center text-body sm:text-lead">
-              مشاهده نمونه‌کارها
+              {t.hero.portfolioCta}
             </a>
           </div>
         </div>
@@ -63,7 +63,7 @@ export default function Hero() {
                 />
                 <img
                   src="/hero-portrait-1100.jpg"
-                  alt="پرتره حمیده دلدار، آرایشگر متخصص کوتاهی و براشینگ مو"
+                  alt={t.hero.portraitAlt}
                   width={1100}
                   height={1430}
                   fetchPriority="high"
@@ -72,7 +72,7 @@ export default function Hero() {
                 />
               </picture>
             </div>
-            <p className="mt-3 text-eyebrow text-muted sm:mt-5">استودیو</p>
+            <p className="mt-3 text-eyebrow text-muted sm:mt-5">{t.hero.studio}</p>
           </div>
         </div>
       </div>

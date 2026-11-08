@@ -5,32 +5,31 @@ import Navbar from './components/Navbar.tsx'
 import Portfolio from './components/Portfolio.tsx'
 import ScissorsCursor from './components/ScissorsCursor.tsx'
 import Services from './components/Services.tsx'
+import { useLocale } from './lib/locale-context.ts'
 import { ScrollManager } from './lib/router.tsx'
 import { useRouter } from './lib/router-context.ts'
 
 // keeps the calendar + form code out of the landing bundle
 const BookingPage = lazy(() => import('./pages/BookingPage.tsx'))
 
-const TITLES: Record<string, string> = {
-  home: 'حمیده دلدار | Hamideh Deldar',
-  booking: 'رزرو نوبت | حمیده دلدار',
-}
-
 function RouteFallback() {
+  const { t } = useLocale()
+
   return (
     <div className="container-lux flex min-h-svh items-center justify-center">
-      <p className="text-eyebrow text-muted">در حال بارگذاری</p>
+      <p className="text-eyebrow text-muted">{t.common.loading}</p>
     </div>
   )
 }
 
 export default function App() {
   const { pathname } = useRouter()
+  const { t } = useLocale()
   const isBooking = pathname === '/booking' || pathname.startsWith('/booking/')
 
   useEffect(() => {
-    document.title = isBooking ? TITLES.booking : TITLES.home
-  }, [isBooking])
+    document.title = isBooking ? t.meta.bookingTitle : t.meta.homeTitle
+  }, [isBooking, t])
 
   return (
     <>

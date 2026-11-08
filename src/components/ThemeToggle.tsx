@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useLocale } from '../lib/locale-context.ts'
 import { useTheme, type ThemeMode } from '../lib/theme-context.ts'
 
 function SunIcon({ className = 'size-4' }: { className?: string }) {
@@ -27,14 +28,15 @@ function MonitorIcon({ className = 'size-4' }: { className?: string }) {
   )
 }
 
-const OPTIONS: { mode: ThemeMode; label: string; icon: typeof SunIcon }[] = [
-  { mode: 'system', label: 'سیستم', icon: MonitorIcon },
-  { mode: 'light', label: 'روشن', icon: SunIcon },
-  { mode: 'dark', label: 'تاریک', icon: MoonIcon },
+const OPTIONS: { mode: ThemeMode; icon: typeof SunIcon }[] = [
+  { mode: 'system', icon: MonitorIcon },
+  { mode: 'light', icon: SunIcon },
+  { mode: 'dark', icon: MoonIcon },
 ]
 
 export default function ThemeToggle({ className = '' }: { className?: string }) {
   const { mode, effectiveTheme, setMode } = useTheme()
+  const { t } = useLocale()
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -57,6 +59,7 @@ export default function ThemeToggle({ className = '' }: { className?: string }) 
   }, [isOpen])
 
   const currentOption = OPTIONS.find((o) => o.mode === mode) ?? OPTIONS[0]
+  const currentLabel = t.theme[currentOption.mode]
   const IconComp = mode === 'system' ? MonitorIcon : effectiveTheme === 'dark' ? MoonIcon : SunIcon
 
   return (
@@ -66,19 +69,19 @@ export default function ThemeToggle({ className = '' }: { className?: string }) 
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
         aria-haspopup="true"
-        aria-label={`تغییر پوسته (پوسته فعلی: ${currentOption.label})`}
+        aria-label={t.theme.change(currentLabel)}
         className="flex h-9 items-center gap-1.5 rounded-full border border-line px-3 text-body text-ink transition-colors hover:border-fill hover:bg-wash focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink sm:h-10 sm:px-3.5"
       >
         <IconComp className="size-4 shrink-0 text-muted" />
-        <span className="text-xs font-medium sm:text-sm">{currentOption.label}</span>
+        <span className="hidden text-xs font-medium sm:inline sm:text-sm">{currentLabel}</span>
       </button>
 
       {isOpen && (
         <div
           role="menu"
           aria-orientation="vertical"
-          aria-label="انتخاب پوسته"
-          className="absolute start-0 top-full z-50 mt-2 min-w-36 overflow-hidden rounded-xl border border-line bg-canvas p-1 shadow-lg shadow-ink/10 backdrop-blur-md"
+          aria-label={t.theme.menu}
+          className="absolute end-0 top-full z-50 mt-2 min-w-36 overflow-hidden rounded-xl border border-line bg-canvas p-1 shadow-lg shadow-ink/10 backdrop-blur-md"
         >
           {OPTIONS.map((opt) => {
             const isSelected = mode === opt.mode
@@ -101,7 +104,7 @@ export default function ThemeToggle({ className = '' }: { className?: string }) 
               >
                 <span className="flex items-center gap-2">
                   <Icon className="size-4 shrink-0" />
-                  <span>{opt.label}</span>
+                  <span>{t.theme[opt.mode]}</span>
                 </span>
                 {isSelected && (
                   <span className="size-1.5 rounded-full bg-fill" aria-hidden="true" />

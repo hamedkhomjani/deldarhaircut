@@ -3,5 +3,5 @@ export const site = {
   latinName: 'Hamideh Deldar',
   instagram: 'https://www.instagram.com/deldarhaircutt',
   instagramHandle: '@deldarhaircutt',
-  phone: '',
+  phone: '09124987810',
 }

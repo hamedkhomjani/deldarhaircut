@@ -1,7 +1,9 @@
 import { useEffect, useReducer, useRef, useState } from 'react'
 import DatePicker from './DatePicker.tsx'
-import { longLabel, toFa } from '../lib/jalali.ts'
-import { normalizePhone, phoneValid } from '../lib/phone.ts'
+import type { Messages } from '../lib/i18n.ts'
+import { formatNumber, longLabel } from '../lib/jalali.ts'
+import { useLocale } from '../lib/locale-context.ts'
+import { normalizePhone, phoneIntl, phoneValid } from '../lib/phone.ts'
 import { site } from '../site.ts'
 
 type LocationKey = 'studio' | 'home'
@@ -104,45 +106,14 @@ const seeded = (location: LocationKey | null, service: ServiceKey | null): State
   return { ...initial, location, service, step }
 }
 
-const STEPS = ['محل سرویس', 'نوع خدمت', 'تاریخ و ساعت', 'اطلاعات تماس', 'تأیید']
+const LOCATION_KEYS: LocationKey[] = ['studio', 'home']
+const SERVICE_KEYS: ServiceKey[] = ['cut', 'blowdry', 'package']
 
-const LOCATIONS: { key: LocationKey; title: string; latin: string; note: string }[] = [
-  {
-    key: 'studio',
-    title: 'در استودیو',
-    latin: 'In Studio',
-    note: 'برش و براشینگ در فضای آرام استودیو.',
-  },
-  {
-    key: 'home',
-    title: 'در منزل شما',
-    latin: 'At Home',
-    note: 'همه‌ی خدمات استودیو، در خانه‌ی خودتان.',
-  },
+const SLOT_GROUPS: { key: keyof Messages['booking']['slotGroups']; slots: string[] }[] = [
+  { key: 'morning', slots: ['09:00', '10:00', '11:00', '12:00'] },
+  { key: 'afternoon', slots: ['13:00', '14:00', '15:00', '16:00', '17:00'] },
+  { key: 'evening', slots: ['18:00', '19:00', '20:00'] },
 ]
-
-const SERVICE_OPTIONS: { key: ServiceKey; title: string; note: string }[] = [
-  { key: 'cut', title: 'کوتاهی تخصصی', note: 'برش دقیق و متناسب با فرم صورت' },
-  { key: 'blowdry', title: 'براشینگ', note: 'خشک‌کردن و استایلینگ حرفه‌ای' },
-  { key: 'package', title: 'کوتاهی + براشینگ', note: 'پکیج کامل، با تخفیف ویژه' },
-]
-
-const SLOT_GROUPS = [
-  { label: 'صبح', slots: ['09:00', '10:00', '11:00', '12:00'] },
-  { label: 'عصر', slots: ['13:00', '14:00', '15:00', '16:00', '17:00'] },
-  { label: 'غروب', slots: ['18:00', '19:00', '20:00'] },
-]
-
-const SERVICE_LABEL: Record<ServiceKey, string> = {
-  cut: 'کوتاهی تخصصی',
-  blowdry: 'براشینگ',
-  package: 'کوتاهی + براشینگ',
-}
-
-const LOCATION_LABEL: Record<LocationKey, string> = {
-  studio: 'در استودیو',
-  home: 'در منزل شما',
-}
 
 function OptionCard({
   name,
@@ -197,7 +168,7 @@ function OptionCard({
         </span>
       </div>
       {latin && (
-        <span className="mt-1 font-latin text-xs tracking-[0.2em] text-muted uppercase sm:text-sm">
+        <span className="mt-1 font-latin text-xs tracking-[0.2em] text-muted uppercase sm:text-sm" lang="en">
           {latin}
         </span>
       )}
@@ -213,6 +184,7 @@ export default function Booking({
   initialLocation?: LocationKey | null
   initialService?: ServiceKey | null
 }) {
+  const { locale, t } = useLocale()
   const [state, dispatch] = useReducer(
     reducer,
     { initialLocation, initialService },
@@ -234,6 +206,7 @@ export default function Booking({
   const [copied, setCopied] = useState(false)
 
   const home = state.location === 'home'
+  const steps = t.booking.steps
 
   const stepValid = [
     state.location !== null,
@@ -295,17 +268,17 @@ export default function Booking({
   const addressError = state.address.length > 0 && state.address.trim().length < 5
 
   const summary: [string, string][] = [
-    ['محل سرویس', state.location ? LOCATION_LABEL[state.location] : '—'],
-    ['نوع خدمت', state.service ? SERVICE_LABEL[state.service] : '—'],
-    ['تاریخ', state.date ? longLabel(state.date) : '—'],
-    ['ساعت', state.time ? toFa(state.time) : '—'],
-    ['نام و نام خانوادگی', state.name],
-    ['شماره تماس', toFa(normalizePhone(state.phone))],
-    ...(home ? ([['نشانی', state.address]] as [string, string][]) : []),
+    [t.booking.summary.location, state.location ? t.booking.locationLabels[state.location] : t.common.none],
+    [t.booking.summary.service, state.service ? t.booking.serviceLabels[state.service] : t.common.none],
+    [t.booking.summary.date, state.date ? longLabel(state.date, locale) : t.common.none],
+    [t.booking.summary.time, state.time ? formatNumber(state.time, locale) : t.common.none],
+    [t.booking.summary.name, state.name],
+    [t.booking.summary.phone, formatNumber(normalizePhone(state.phone), locale)],
+    ...(home ? ([[t.booking.summary.address, state.address]] as [string, string][]) : []),
   ]
 
-  const summaryText = ['درخواست نوبت — حمیده دلدار', ...summary.map(([k, v]) => `${k}: ${v}`)].join('\n')
-  const waLink = `https://wa.me/${site.phone.replace(/\D/g, '')}?text=${encodeURIComponent(summaryText)}`
+  const summaryText = [t.booking.summary.title, ...summary.map(([k, v]) => `${k}: ${v}`)].join('\n')
+  const waLink = `https://wa.me/${phoneIntl(site.phone)}?text=${encodeURIComponent(summaryText)}`
 
   const copySummary = async () => {
     try {
@@ -324,13 +297,13 @@ export default function Booking({
         {/* Section header */}
         <div className="grid gap-6 sm:gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-20">
           <div>
-            <p className="text-eyebrow text-muted">رزرو نوبت</p>
+            <p className="text-eyebrow text-muted">{t.booking.eyebrow}</p>
             <h2 className="mt-4 font-display text-[clamp(1.75rem,5.5vw,2.5rem)] leading-[1.55] font-medium text-balance text-title sm:mt-5 md:mt-7">
-              نوبت خود را رزرو کنید
+              {t.booking.heading}
             </h2>
           </div>
           <p className="max-w-xl text-[1.0625rem] leading-8 font-light text-ink sm:text-lead lg:pb-2">
-            پنج قدم کوتاه. بعد از ثبت فرم، برای هماهنگی نهایی با شما تماس می‌گیرم.
+            {t.booking.intro}
           </p>
         </div>
 
@@ -341,7 +314,12 @@ export default function Booking({
             <div className="flex items-center justify-between gap-4 sm:gap-6">
               <div className="flex items-center gap-3">
                 <p className="text-eyebrow text-muted">
-                  {state.done ? 'درخواست آماده ارسال' : `مرحله ${toFa(state.step + 1)} از ${toFa(STEPS.length)}`}
+                  {state.done
+                    ? t.booking.progress.ready
+                    : t.booking.progress.stepOf(
+                        formatNumber(state.step + 1, locale),
+                        formatNumber(steps.length, locale),
+                      )}
                 </p>
                 {(state.location !== null || state.service !== null) && !state.done && (
                   <button
@@ -349,14 +327,16 @@ export default function Booking({
                     onClick={() => dispatch({ type: 'reset' })}
                     className="text-xs text-muted hover:text-closed transition-colors underline decoration-dotted underline-offset-4"
                   >
-                    (شروع از ابتدا)
+                    {t.booking.progress.startOver}
                   </button>
                 )}
               </div>
-              <p className="text-[0.9375rem] text-title sm:text-body">{STEPS[state.done ? STEPS.length - 1 : state.step]}</p>
+              <p className="text-[0.9375rem] text-title sm:text-body">
+                {steps[state.done ? steps.length - 1 : state.step]}
+              </p>
             </div>
             <ol className="mt-3.5 flex items-center gap-1.5 sm:mt-5 sm:gap-2">
-              {STEPS.map((label, i) => (
+              {steps.map((label, i) => (
                 <li key={label} className="flex-1">
                   <span
                     className={`block h-[3px] w-full transition-colors duration-500 ${
@@ -373,13 +353,12 @@ export default function Booking({
           <div ref={stepRef} tabIndex={-1} className="p-4 focus:outline-none sm:p-6 md:p-8 lg:p-12">
             {state.done ? (
               <div key="done" className="animate-rise motion-reduce:animate-none">
-                <p className="text-eyebrow text-muted">تأیید</p>
+                <p className="text-eyebrow text-muted">{t.booking.done.eyebrow}</p>
                 <h3 className="mt-4 font-display text-2xl leading-[1.6] font-medium text-title sm:mt-6 sm:text-3xl md:text-4xl">
-                  نوبت شما آماده است
+                  {t.booking.done.heading}
                 </h3>
                 <p className="mt-4 max-w-lg text-[0.9375rem] leading-7 font-light text-ink sm:mt-5 sm:text-body sm:leading-8">
-                  ممنون {state.name.split(' ')[0]}. برای ثبت نهایی، خلاصه‌ی زیر را در واتساپ یا دایرکت
-                  اینستاگرام بفرستید. پس از دریافت، در همان روز با شما تماس می‌گیرم.
+                  {t.booking.done.body(state.name.split(' ')[0])}
                 </p>
 
                 {/* Summary table */}
@@ -397,9 +376,8 @@ export default function Booking({
 
                 {/* Actions — stacked on mobile, wrap on sm+ */}
                 <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 md:mt-12">
-                  {/* site.phone ships empty, which used to render nothing here and left a
-                      completed booking with nowhere to go. Fall back to the one channel
-                      that is always configured. */}
+                  {/* WhatsApp is the nicer hand-off for a booking summary, but Instagram DM
+                      is always configured, so it stays as the fallback. */}
                   {site.phone ? (
                     <a
                       href={waLink}
@@ -407,7 +385,7 @@ export default function Booking({
                       rel="noopener noreferrer"
                       className="pill h-12 px-6 sm:h-14 sm:px-8"
                     >
-                      ارسال در واتساپ
+                      {t.booking.done.whatsapp}
                     </a>
                   ) : (
                     <a
@@ -416,7 +394,7 @@ export default function Booking({
                       rel="noopener noreferrer"
                       className="pill h-12 px-6 sm:h-14 sm:px-8"
                     >
-                      ارسال در دایرکت اینستاگرام
+                      {t.booking.done.instagram}
                     </a>
                   )}
                   <button
@@ -425,21 +403,21 @@ export default function Booking({
                     aria-live="polite"
                     className="pill-outline h-12 w-full px-6 sm:h-14 sm:w-auto sm:px-8"
                   >
-                    {copied ? 'کپی شد' : 'کپی خلاصه'}
+                    {copied ? t.booking.done.copied : t.booking.done.copy}
                   </button>
                   <button
                     type="button"
                     onClick={() => dispatch({ type: 'edit', step: 3 })}
                     className="link-underline text-body"
                   >
-                    ویرایش نوبت
+                    {t.booking.done.edit}
                   </button>
                   <button
                     type="button"
                     onClick={() => dispatch({ type: 'reset' })}
                     className="link-underline text-body"
                   >
-                    ثبت نوبت جدید
+                    {t.booking.done.newBooking}
                   </button>
                 </div>
               </div>
@@ -449,19 +427,19 @@ export default function Booking({
                 {state.step === 0 && (
                   <fieldset>
                     <legend className="text-[1.0625rem] font-light text-ink sm:text-lead">
-                      کجا خدمات را دریافت کنیم؟
+                      {t.booking.step0.legend}
                     </legend>
                     <div className="mt-5 grid gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-4 md:mt-8 md:gap-6">
-                      {LOCATIONS.map((l) => (
+                      {LOCATION_KEYS.map((key) => (
                         <OptionCard
-                          key={l.key}
+                          key={key}
                           name="location"
-                          value={l.key}
-                          checked={state.location === l.key}
+                          value={key}
+                          checked={state.location === key}
                           onSelect={(v) => dispatch({ type: 'choose', key: 'location', value: v })}
-                          title={l.title}
-                          latin={l.latin}
-                          note={l.note}
+                          title={t.booking.locations[key].title}
+                          latin={t.booking.locations[key].latin}
+                          note={t.booking.locations[key].note}
                         />
                       ))}
                     </div>
@@ -472,18 +450,18 @@ export default function Booking({
                 {state.step === 1 && (
                   <fieldset>
                     <legend className="text-[1.0625rem] font-light text-ink sm:text-lead">
-                      کدام خدمت را می‌خواهید؟
+                      {t.booking.step1.legend}
                     </legend>
                     <div className="mt-5 grid gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-4 md:mt-8 md:gap-6">
-                      {SERVICE_OPTIONS.map((s) => (
+                      {SERVICE_KEYS.map((key) => (
                         <OptionCard
-                          key={s.key}
+                          key={key}
                           name="service"
-                          value={s.key}
-                          checked={state.service === s.key}
+                          value={key}
+                          checked={state.service === key}
                           onSelect={(v) => dispatch({ type: 'choose', key: 'service', value: v })}
-                          title={s.title}
-                          note={s.note}
+                          title={t.booking.services[key].title}
+                          note={t.booking.services[key].note}
                         />
                       ))}
                     </div>
@@ -494,7 +472,7 @@ export default function Booking({
                 {state.step === 2 && (
                   <div>
                     <p className="text-[1.0625rem] font-light text-ink sm:text-lead">
-                      چه روز و چه ساعتی برای شما مناسب است؟
+                      {t.booking.step2.question}
                     </p>
 
                     {state.date && (
@@ -502,15 +480,17 @@ export default function Booking({
                         <div className="flex items-center gap-2">
                           <span className="inline-block size-2 rounded-full bg-fill" aria-hidden="true" />
                           <span>
-                            تاریخ انتخابی: <strong>{longLabel(state.date)}</strong>
+                            {t.booking.step2.selectedDate}{' '}
+                            <strong>{longLabel(state.date, locale)}</strong>
                           </span>
                         </div>
                         {state.time ? (
                           <div className="font-medium text-title">
-                            ساعت <strong>{toFa(state.time)}</strong>
+                            {t.booking.step2.timeLabel}{' '}
+                            <strong>{formatNumber(state.time, locale)}</strong>
                           </div>
                         ) : (
-                          <span className="text-eyebrow text-muted">ساعت را انتخاب کنید</span>
+                          <span className="text-eyebrow text-muted">{t.booking.step2.chooseTime}</span>
                         )}
                       </div>
                     )}
@@ -519,38 +499,41 @@ export default function Booking({
                     <div className="mt-5 grid gap-6 sm:mt-6 md:mt-8 md:gap-8 lg:grid-cols-[auto_1fr] lg:gap-12">
                       <div className="w-full lg:w-[19rem]">
                         <DatePicker
+                          key={locale}
                           value={state.date}
                           onChange={(iso) => dispatch({ type: 'choose', key: 'date', value: iso })}
                         />
                       </div>
 
                       <fieldset className="min-w-0">
-                        <legend className="text-eyebrow text-muted">ساعت‌های آزاد</legend>
+                        <legend className="text-eyebrow text-muted">{t.booking.step2.availableSlots}</legend>
                         {!state.date ? (
                           <p className="mt-3 text-[0.9375rem] font-light text-muted sm:mt-5 sm:text-body">
-                            ابتدا از تقویم، یک تاریخ انتخاب کنید.
+                            {t.booking.step2.chooseDate}
                           </p>
                         ) : (
                           <div className="mt-4 space-y-4 sm:mt-6 sm:space-y-6">
                             {SLOT_GROUPS.map((group) => (
-                              <div key={group.label}>
-                                <p className="mb-2 text-eyebrow text-muted">{group.label}</p>
+                              <div key={group.key}>
+                                <p className="mb-2 text-eyebrow text-muted">
+                                  {t.booking.slotGroups[group.key]}
+                                </p>
                                 <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4 sm:gap-2 lg:grid-cols-3 xl:grid-cols-4">
-                                  {group.slots.map((t) => (
+                                  {group.slots.map((slot) => (
                                     <label
-                                      key={t}
+                                      key={slot}
                                       className="flex h-11 cursor-pointer items-center justify-center border border-line text-[0.9375rem] text-ink transition-colors duration-300 has-checked:border-fill has-checked:bg-fill has-checked:text-on-fill has-focus-visible:outline-2 has-focus-visible:outline-offset-4 has-focus-visible:outline-ink hover:border-fill sm:h-12 sm:text-body"
                                     >
                                       <input
                                         type="radio"
                                         name="time"
-                                        value={t}
-                                        checked={state.time === t}
+                                        value={slot}
+                                        checked={state.time === slot}
                                         disabled={!state.date}
-                                        onChange={() => dispatch({ type: 'choose', key: 'time', value: t })}
+                                        onChange={() => dispatch({ type: 'choose', key: 'time', value: slot })}
                                         className="sr-only"
                                       />
-                                      {toFa(t)}
+                                      {formatNumber(slot, locale)}
                                     </label>
                                   ))}
                                 </div>
@@ -567,19 +550,19 @@ export default function Booking({
                 {state.step === 3 && (
                   <div>
                     <p className="text-[1.0625rem] font-light text-ink sm:text-lead">
-                      برای هماهنگی، اطلاعات تماس شما
+                      {t.booking.step3.question}
                     </p>
                     <div className="mt-5 grid gap-4 sm:mt-6 sm:grid-cols-2 sm:gap-6 md:mt-8">
                       <div className="block">
                         <label htmlFor="booking-name" className="block text-eyebrow text-muted">
-                          نام و نام خانوادگی
+                          {t.booking.step3.name}
                         </label>
                         <input
                           id="booking-name"
                           type="text"
                           value={state.name}
                           onChange={(e) => dispatch({ type: 'text', key: 'name', value: e.target.value })}
-                          placeholder="مثلاً مریم رضایی"
+                          placeholder={t.booking.step3.namePlaceholder}
                           className="field mt-2.5 sm:mt-3"
                           autoComplete="name"
                         />
@@ -588,14 +571,14 @@ export default function Booking({
                       <div className="block">
                         <div className="flex items-center justify-between">
                           <label htmlFor="booking-phone" className="block text-eyebrow text-muted">
-                            شماره تماس
+                            {t.booking.step3.phone}
                           </label>
                           {phoneValid(state.phone) && (
                             <span className="flex items-center gap-1 text-[11px] font-medium text-ink">
                               <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M20 6L9 17l-5-5" />
                               </svg>
-                              معتبر
+                              {t.booking.step3.valid}
                             </span>
                           )}
                         </div>
@@ -614,7 +597,7 @@ export default function Booking({
                         />
                         {contactError && (
                           <span id="booking-phone-error" className="mt-2 block text-[0.875rem] text-closed sm:text-body">
-                            شماره را به شکل 09121234567 وارد کنید.
+                            {t.booking.step3.phoneError}
                           </span>
                         )}
                       </div>
@@ -622,14 +605,14 @@ export default function Booking({
                       {home && (
                         <div className="block sm:col-span-2">
                           <label htmlFor="booking-address" className="block text-eyebrow text-muted">
-                            نشانی منزل
+                            {t.booking.step3.address}
                           </label>
                           <input
                             id="booking-address"
                             type="text"
                             value={state.address}
                             onChange={(e) => dispatch({ type: 'text', key: 'address', value: e.target.value })}
-                            placeholder="منطقه، خیابان، پلاک و کوچه"
+                            placeholder={t.booking.step3.addressPlaceholder}
                             className="field mt-2.5 sm:mt-3"
                             autoComplete="street-address"
                             aria-invalid={addressError || undefined}
@@ -637,7 +620,7 @@ export default function Booking({
                           />
                           {addressError && (
                             <span id="booking-address-error" className="mt-2 block text-[0.875rem] text-closed sm:text-body">
-                              نشانی را کامل‌تر بنویسید.
+                              {t.booking.step3.addressError}
                             </span>
                           )}
                         </div>
@@ -654,7 +637,7 @@ export default function Booking({
                     disabled={!stepValid[state.step]}
                     className="pill h-12 w-full px-6 disabled:cursor-not-allowed disabled:opacity-35 sm:h-14 sm:w-auto sm:px-8"
                   >
-                    {state.step === 3 ? 'ثبت نهایی' : 'مرحله بعد'}
+                    {state.step === 3 ? t.booking.submit : t.booking.next}
                   </button>
                   {state.step > 0 && (
                     <button
@@ -662,7 +645,7 @@ export default function Booking({
                       onClick={() => dispatch({ type: 'back' })}
                       className="pill-outline h-12 w-full px-6 sm:h-14 sm:w-auto sm:px-8"
                     >
-                      مرحله قبل
+                      {t.booking.back}
                     </button>
                   )}
                 </div>

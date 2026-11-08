@@ -14,3 +14,9 @@ export const normalizePhone = (raw: string) => {
 }
 
 export const phoneValid = (raw: string) => /^09\d{9}$/.test(normalizePhone(raw))
+
+/** Turns a local 09XXXXXXXXX number into the 98XXXXXXXXXX form wa.me expects. */
+export const phoneIntl = (raw: string) => {
+  const d = normalizePhone(raw)
+  return d.startsWith('0') ? `98${d.slice(1)}` : d
+}

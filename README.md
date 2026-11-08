@@ -1,7 +1,8 @@
 # سایت حمیده دلدار — آرایش و پیرایش
 
-Landing page and booking flow for a luxury hairdressing/makeup studio. Persian (Farsi), RTL, fully
-responsive, with a five-step booking wizard on its own route.
+Landing page and booking flow for a luxury hairdressing/makeup studio. Persian (Farsi) is the
+default, with a full English translation, RTL/LTR switching, and a five-step booking wizard on its
+own route.
 
 ## Stack
 
@@ -23,6 +24,18 @@ npm run lint
 
 > `npm run build` is the real typecheck. `tsconfig.json` is solution-style (`"files": []` plus
 > project references), so a bare `npx tsc --noEmit` checks **zero** files and silently passes.
+
+## Languages
+
+The header language button switches between Farsi (`fa`, RTL, Jalali calendar, Persian digits) and
+English (`en`, LTR, Gregorian calendar, Latin digits). The choice is stored in `localStorage` under
+`lang`, and `index.html` applies it before first paint so the page never flashes the wrong
+direction.
+
+All copy lives in `src/lib/i18n.ts`. The English dictionary is typed from the Farsi one, so a
+missing key is a type error. `LocaleProvider` (`src/lib/locale.tsx`) keeps the document `lang`/`dir`
+and meta description in sync. Holiday names (`src/lib/holidays.ts`) and date formatting
+(`src/lib/jalali.ts`) are locale-aware too.
 
 ## Routes
 
@@ -98,12 +111,14 @@ translation for convenience, with the English marked as authoritative in case of
 
 ## Contact details
 
-`src/site.ts` has `phone: ''`. Until a real number is filled in:
+`src/site.ts` holds `phone`, the owner's mobile number, stored in local `09XXXXXXXXX` form.
 
-- the footer renders a non-interactive "شماره تماس" placeholder instead of a `tel:` link
-- the booking confirmation has no WhatsApp hand-off
+- the footer renders a `tel:` link with the number shown in Persian digits
+- the booking confirmation offers a WhatsApp hand-off, built via `phoneIntl()` so `wa.me` gets the
+  international `98XXXXXXXXXX` form
 
-A real number was deliberately not guessed.
+If `phone` is ever emptied, the footer falls back to a non-interactive "شماره تماس" placeholder and
+the booking confirmation falls back to the Instagram DM.
 
 ## Content still to supply
 
